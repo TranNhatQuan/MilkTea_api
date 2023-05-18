@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "idShop",
         
       });
-      Shop.hasMany(models.User,{
+      Shop.hasMany(models.Staff,{
         foreignKey: "idShop",
         
       });

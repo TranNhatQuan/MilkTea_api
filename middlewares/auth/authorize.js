@@ -2,10 +2,10 @@ const { Account } = require("../../models");
 const { QueryTypes } = require("sequelize");
 
 const authorize = (arrType) => async (req, res, next) => {
-    const { mail } = req;
+    const { phone } = req;
     const account = await Account.findOne({
             where:{
-                mail
+                phone
             }
         })
         if(arrType.findIndex((ele) => ele === account.role > -1)) {

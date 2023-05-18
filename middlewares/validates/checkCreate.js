@@ -1,16 +1,21 @@
 const checkCreateAccount = (Model) => {
   return async (req, res, next) => {
-    const { mail } = req.body;
-    const account = await Model.findOne({
-      where: {
-        mail,
-      },
-    });
-    if (!account) {
-      next();
-    } else {
-      res.status(409).json({ isExist: true, isSuccess:false });
+    try {
+      const { phone } = req.body;
+      const account = await Model.findOne({
+        where: {
+          phone,
+        },
+      });
+      if (!account) {
+        next();
+      } else {
+        res.status(409).json({ isExist: true, isSuccess: false });
+      }
+    } catch (error) {
+      res.status(500).json({ isExist: false, isSuccess: false });
     }
+
   };
 };
 
@@ -18,5 +23,5 @@ const checkCreateAccount = (Model) => {
 
 module.exports = {
   checkCreateAccount,
-  
+
 };

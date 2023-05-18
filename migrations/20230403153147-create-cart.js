@@ -17,7 +17,13 @@ module.exports = {
         references: { model: "Users", key: "idUser" },
         type: Sequelize.INTEGER
       },
-      
+      idStaff: {
+        allowNull: false,
+        
+        
+        references: { model: "Staffs", key: "idStaff" },
+        type: Sequelize.INTEGER
+      },
       shippingCompany: {
         allowNull: false,
         references: { model: "Shipping_companies", key: "idShipping_company" },

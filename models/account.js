@@ -14,6 +14,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "idUser",
        
       })
+      Account.hasOne(models.Staff,{
+        foreignKey: "idStaff",
+       
+      })
       // define association here
     }
   }
