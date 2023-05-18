@@ -24,13 +24,11 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true,
     },
-    mail: {
-      type: DataTypes.STRING(255),
+    phone: {
+      type: DataTypes.INTEGER,
       allowNull: false, 
       unique: true, 
-      validate:{
-        isEmail: true,
-      } 
+      
     },
     password: { type: DataTypes.STRING, allowNull: false },
     role: {type: DataTypes.INTEGER, allowNull: false},

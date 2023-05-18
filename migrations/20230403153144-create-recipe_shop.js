@@ -2,12 +2,12 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('User_recipes', {
-      idUser: {
+    await queryInterface.createTable('Recipe_shops', {
+      idShop: {
         allowNull: false,
         
         primaryKey: true,
-        references: { model: "Users", key: "idUser" },
+        references: { model: "Shops", key: "idShop" },
         type: Sequelize.INTEGER
       },
       idRecipe: {
@@ -17,21 +17,18 @@ module.exports = {
         references: { model: "Recipes", key: "idRecipe" },
         type: Sequelize.INTEGER
       },
-      cmt:{
-        allowNull: true,
-        type: Sequelize.TEXT,
-      },
-      date: {
-        type: Sequelize.DATE,
+      
+      isActive: {
         allowNull: false,
+        type: Sequelize.INTEGER,
       },
-      isLike: {
+      discount: {
         allowNull: false,
         type: Sequelize.INTEGER,
       }
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('User_recipes');
+    await queryInterface.dropTable('Recipe_shops');
   }
 };

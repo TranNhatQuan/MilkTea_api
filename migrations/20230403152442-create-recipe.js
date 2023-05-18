@@ -19,31 +19,17 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: true,
       },
-      calories: {
+      price: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      proteins: {
-        type: Sequelize.DOUBLE,
-        allowNull: false,
-      },
-      fats: {
-        type: Sequelize.DOUBLE,
-        allowNull: false,
-      },
-      carbo: {
-        type: Sequelize.DOUBLE,
-        allowNull: false,
-      },
+      
       idType: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: { model: "Types", key: "idType" },
       },
-      points:{
-        type: Sequelize.INTEGER,
-        allowNull: false
-      },
+      
       image: {
         type: Sequelize.TEXT,
         allowNull: false,
