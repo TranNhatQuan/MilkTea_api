@@ -11,18 +11,16 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Recipe.hasMany(models.User_recipe, {
+      Recipe.hasMany(models.Recipe_shop, {
         foreignKey: "idRecipe",
       });
       Recipe.hasMany(models.Recipe_ingredient, {
         foreignKey: "idRecipe",
       });
-      Recipe.hasMany(models.Recipe_history, {
+      Recipe.hasMany(models.Product, {
         foreignKey: "idRecipe",
       });
-      Recipe.hasOne(models.Recipe_rank, {
-        foreignKey: "idRecipe"
-      })
+     
       Recipe.belongsTo(models.Type, {
         foreignKey: "idType",
       });
