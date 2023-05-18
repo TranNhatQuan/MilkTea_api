@@ -45,26 +45,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    calories: {
+    price: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    proteins: {
-      type: DataTypes.DOUBLE,
-      allowNull: false,
-    },
-    fats: {
-      type: DataTypes.DOUBLE,
-      allowNull: false,
-    },
-    carbo: {
-      type: DataTypes.DOUBLE,
-      allowNull: false,
-    },
-    points:{
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
+    
     image: {
       type: DataTypes.TEXT,
       allowNull: false,

@@ -40,18 +40,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(45),
       allowNull: false,
     },
-    gender: {
-      allowNull: false,
-      type: DataTypes.INTEGER,
-    },
-    weight: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    height: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
+    
     
     isShare: {
       allowNull: false,

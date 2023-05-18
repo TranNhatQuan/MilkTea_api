@@ -16,18 +16,7 @@ module.exports = {
         type: Sequelize.STRING(45),
         allowNull: false,
       },
-      gender: {
-        allowNull: false,
-        type: Sequelize.INTEGER,
-      },
-      weight: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-      },
-      height: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-      },
+      
       
       idAcc: {
         allowNull: false,
@@ -40,7 +29,7 @@ module.exports = {
         type: Sequelize.INTEGER,
       }
     });
-    await queryInterface.sequelize.query(`CREATE VIEW UsersWithBMI AS SELECT idUser,name,gender,weight,height, weight*100*100 / (height * height) as bmi FROM Users WHERE isShare=1;`);
+    
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Users');
