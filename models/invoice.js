@@ -56,5 +56,5 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Invoice',
     timestamps: false,
   });
-  return Cart;
+  return Invoice;
 };

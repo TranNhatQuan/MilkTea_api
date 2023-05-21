@@ -5,13 +5,16 @@ module.exports = {
   async up (queryInterface, Sequelize) {
     return queryInterface.bulkInsert("Types", [
       {
-        name: "Fry"
+        name: "MilkTea"
       },
       {
-        name: "Boil"
+        name: "Topping"
       },
       {
-        name: "Bake"
+        name: "Cookie"
+      },
+      {
+        name: "Basic"
       }
     ]);
   },

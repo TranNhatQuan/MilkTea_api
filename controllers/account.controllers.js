@@ -58,34 +58,41 @@ const loginAdmin = async (req, res) => {
 };
 
 const login = async (req, res) => {
-    const { mail, password } = req.body;
-    const account = await Account.findOne({
-        where: {
-            mail,
-        },
-    });
-    const isAuth = bcrypt.compareSync(password, account.password);
-    if (isAuth) {
-        const customer = await User.findOne({
+    try {
+        const { phone, password } = req.body;
+        const account = await Account.findOne({
             where: {
-                idAcc: account.idAcc,
+                phone,
             },
         });
-        const token = jwt.sign({ mail: account.mail }, "hehehe", {
-            expiresIn: 60 * 60 * 60,
-        });
-        res
-            .status(200)
-            .json({
-                customer,
-                isSuccess : true,
-                token,
-
-                expireTime: 60 * 60 * 60,
+        //console.log(account)
+        const isAuth = bcrypt.compareSync(password, account.password);
+        
+        if (isAuth) {
+            const customer = await User.findOne({
+                where: {
+                    idAcc: account.idAcc,
+                },
             });
-    } else {
-        res.status(400).json({ isSuccess:false});
+            const token = jwt.sign({ mail: account.mail }, "hehehe", {
+                expiresIn: 30*60 * 60 * 60,
+            });
+            res
+                .status(200)
+                .json({
+                    customer,
+                    isSuccess : true,
+                    token,
+    
+                    expireTime: 30*60 * 60 * 60,
+                });
+        } else {
+            return res.status(401).json({ isSuccess:false});
+        }
+    } catch (error) {
+        return res.status(500).json({ isSuccess:false});
     }
+   
 };
 
 const changePassword = async (req, res) => {
