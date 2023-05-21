@@ -2,29 +2,38 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Recipe_ingredients', {
-      idRecipe: {
+    await queryInterface.createTable('Ingredient_shops', {
+      idIngredient_shop: {
         allowNull: false,
         
         primaryKey: true,
-        references: { model: "Recipes", key: "idRecipe" },
+    
         type: Sequelize.INTEGER
       },
       idIngredient: {
         allowNull: false,
         
-        primaryKey: true,
+       
         references: { model: "Ingredients", key: "idIngredient" },
+        
         type: Sequelize.INTEGER
       },
+      idShop: {
+        allowNull: false,
+        
+        
+        references: { model: "Shops", key: "idShop" },
+        type: Sequelize.INTEGER
+      },
+      
+      
       quantity: {
         allowNull: false,
         type: Sequelize.INTEGER,
-      },
-      
+      }
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Recipe_ingredients');
+    await queryInterface.dropTable('Ingredient_shops');
   }
 };

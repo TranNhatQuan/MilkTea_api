@@ -14,6 +14,10 @@ module.exports = {
         unique: true,
         allowNull: false,
       },
+      unitName: {
+        allowNull: false,
+        type: Sequelize.STRING(10),
+      },
       image: {
         allowNull: false,
         type: Sequelize.TEXT,
