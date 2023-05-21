@@ -14,6 +14,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "idUser",
        
       })
+      Account.hasOne(models.Staff,{
+        foreignKey: "idStaff",
+       
+      })
       // define association here
     }
   }
@@ -25,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
     },
     phone: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false, 
       unique: true, 
       

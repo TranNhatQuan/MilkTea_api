@@ -1,37 +1,33 @@
 'use strict';
-
-const { DataTypes } = require('sequelize');
-
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Users', {
-      idUser: {
+    await queryInterface.createTable('Imports', {
+      idIngredient_shop: {
         allowNull: false,
-        autoIncrement: true,
+        
         primaryKey: true,
+        references: { model: "Ingredient_shops", key: "idIngredient_shop" },
+        
         type: Sequelize.INTEGER
       },
-      name: {
-        type: Sequelize.STRING(45),
+      
+      date: {
+        type: Sequelize.DATEONLY,
+        primaryKey: true,
         allowNull: false,
       },
-      
-      
-      idAcc: {
+      price:{
         allowNull: false,
-        unique:true,
-        references: { model: "Accounts", key: "idAcc" },
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
-      isShare: {
+      quantity: {
         allowNull: false,
         type: Sequelize.INTEGER,
       }
     });
-    
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Users');
+    await queryInterface.dropTable('Imports');
   }
 };

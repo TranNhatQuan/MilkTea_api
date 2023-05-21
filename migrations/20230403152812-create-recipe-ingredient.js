@@ -21,10 +21,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER,
       },
-      unitName: {
-        allowNull: false,
-        type: Sequelize.STRING(10),
-      }
+      
     });
   },
   async down(queryInterface, Sequelize) {

@@ -6,27 +6,32 @@ module.exports = {
     return queryInterface.bulkInsert("Recipe_ingredients", [
       {
         idRecipe: 1,
-        idIngredient: 1,
-        quantity: 2,
-        unitName: "g"
+        idIngredient: 2,
+        quantity: 10,
       },
       {
         idRecipe: 1,
-        idIngredient: 2,
-        quantity: 2,
-        unitName: "ml"
+        idIngredient: 3,
+        quantity: 10,
+      },
+      {
+        idRecipe: 1,
+        idIngredient: 7,
+        quantity: 10,
       },
       {
         idRecipe: 2,
-        idIngredient: 1,
-        quantity: 2,
-        unitName: "g"
+        idIngredient: 5,
+        quantity: 10,
       },
       {
-        idRecipe: 3,
-        idIngredient: 1,
-        quantity: 2,
-        unitName: "g"
+        idRecipe: 2,
+        idIngredient: 4,
+        quantity: 10,
+      },{
+        idRecipe: 2,
+        idIngredient: 3,
+        quantity: 10,
       },
     ]);
   },

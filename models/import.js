@@ -2,48 +2,50 @@
 const {
   Model
 } = require('sequelize');
-
-const recipe_ingredient = require('./recipe_ingredient');
 module.exports = (sequelize, DataTypes) => {
-  class Ingredient extends Model {
+  class Import extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
-      Ingredient.hasMany(models.Recipe_ingredient,{
-        foreignKey: "idIngredient"
+      
+      Import.belongsTo(models.Ingredient_shop, {
+        foreignKey: "idIngredient_shop",
       })
-      Ingredient.hasMany(models.Ingredient_shop,{
-        foreignKey: "idIngredient"
-      })
+      
     }
   }
-  Ingredient.init({
-    idIngredient: {
+  Import.init({
+    idIngredient_shop: {
       allowNull: false,
-      autoIncrement: true,
+      
       primaryKey: true,
+      references: { model: "Ingredient_shops", key: "idIngredient_shop" },
+      
       type: DataTypes.INTEGER
     },
-    name: {
-      type: DataTypes.STRING(45),
+    
+    date: {
+      //YYYY-MM-DD
+      type: DataTypes.DATEONLY,
+      primaryKey: true,
       allowNull: false,
+      primaryKey: true,
     },
-    image: {
+    price:{
       allowNull: false,
-      type: DataTypes.TEXT,
+      type: DataTypes.INTEGER,
     },
-    unitName: {
+    quantity: {
       allowNull: false,
-      type: DataTypes.STRING(10),
+      type: DataTypes.INTEGER,
     }
   }, {
     sequelize,
-    modelName: 'Ingredient',
+    modelName: 'Import',
     timestamps: false,
   });
-  return Ingredient;
+  return Import;
 };

@@ -39,10 +39,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       type: DataTypes.INTEGER,
     },
-    unitName: {
-      allowNull: false,
-      type: DataTypes.STRING(10),
-    }
+    
   }, {
     sequelize,
     modelName: 'Recipe_ingredient',

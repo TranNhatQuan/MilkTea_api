@@ -3,47 +3,45 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class User extends Model {
+  class Export extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
-      User.belongsTo(models.Account,{
-        foreignKey: "idAcc",
-        
-      });
       
-      User.hasMany(models.Cart,{
-        foreignKey: "idUser",
-      });
+      Export.belongsTo(models.Ingredient_shop, {
+        foreignKey: "idIngredient_shop",
+      })
       
     }
   }
-  User.init({
-    idUser: {
+  Export.init({
+    idIngredient_shop: {
       allowNull: false,
-      autoIncrement: true,
+      
       primaryKey: true,
-      type: DataTypes.INTEGER,
+      references: { model: "Ingredient_shops", key: "idIngredient_shop" },
+      
+      type: DataTypes.INTEGER
     },
-    name: {
-      type: DataTypes.STRING(45),
+    date: {
+      //YYYY-MM-DD
+      type: DataTypes.DATEONLY,
+      primaryKey: true,
       allowNull: false,
+      primaryKey: true,
     },
     
-    
-    isShare: {
+    quantity: {
       allowNull: false,
       type: DataTypes.INTEGER,
     }
-  },
-  {
+  }, {
     sequelize,
-    modelName: 'User',
+    modelName: 'Export',
     timestamps: false,
   });
-  return User;
+  return Export;
 };

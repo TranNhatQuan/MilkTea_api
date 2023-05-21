@@ -5,8 +5,15 @@ module.exports = {
     await queryInterface.createTable('Carts', {
       idCart: {
         allowNull: false,
-        
+        autoIncrement: true,
         primaryKey: true,
+        type: Sequelize.INTEGER
+      },
+      idProduct: {
+        allowNull: false,
+        
+        
+        references: { model: "Products", key: "idProduct" },
         
         type: Sequelize.INTEGER
       },
@@ -18,26 +25,8 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       
-      shippingCompany: {
-        allowNull: false,
-        references: { model: "Shipping_companies", key: "idShipping_company" },
-        type: Sequelize.INTEGER,
-      },
-      shippingFee: {
-        allowNull: false,
-        
-        type: Sequelize.INTEGER,
-      },
-      totalCartAmount: {
-        allowNull: false,
-        
-        type: Sequelize.INTEGER,
-      },
-      date: {
-        type: Sequelize.DATE,
-        allowNull: false,
-      },
-      status: {
+      
+      quantity: {
         allowNull: false,
         type: Sequelize.INTEGER,
       }

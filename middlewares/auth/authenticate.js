@@ -7,7 +7,7 @@ const authenticate = (req, res, next) => {
   }
   try {
     const data = jwt.verify(token, "hehehe");
-    req.mail = data.mail;
+    req.phone = data.phone;
 
 
 
