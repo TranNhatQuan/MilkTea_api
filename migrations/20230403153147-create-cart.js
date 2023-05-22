@@ -15,7 +15,7 @@ module.exports = {
         
         references: { model: "Products", key: "idProduct" },
         
-        type: Sequelize.INTEGER
+        type: Sequelize.STRING
       },
       idUser: {
         allowNull: false,

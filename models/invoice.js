@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
   Invoice.init({
     idInvoice: {
       allowNull: false,
-
+      autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER
     },

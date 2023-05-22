@@ -3,18 +3,16 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    return queryInterface.bulkInsert("Users", [
+    return queryInterface.bulkInsert("Shops", [
       {
-        name: 'TranNhatQuan',
-        idAcc: 1,
-        isShare: 1,
-       
+        address: 'TranNhatQuan',
+        isActive: 0,
+        image: 'https://cdn.tgdd.vn/2020/08/CookRecipe/Avatar/uc-ga-chien-gion-thumbnail.jpg',
       },
       {
-        name: 'Tran Nhat Quan',
-       
-        idAcc: 5,
-        isShare: 1,
+        address: '97 Man Thiện, Thủ Đức',
+        isActive: 1,
+        image: 'https://cdn.tgdd.vn/2020/08/CookRecipe/Avatar/uc-ga-chien-gion-thumbnail.jpg',
       },
      
     ]);

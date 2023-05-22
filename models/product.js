@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       
       primaryKey: true,
-      type: DataTypes.INTEGER
+      type: DataTypes.STRING
     },
     idRecipe: {
       allowNull: false,
@@ -39,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     quantity: {
       allowNull: false,
-      type: DataTypes.INTEGER,
+      type: DataTypes.DOUBLE,
     }
   }, {
     sequelize,

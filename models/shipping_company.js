@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
   Shipping_company.init({
     idShipping_company: {
       allowNull: false,
-      
+      autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER
     },

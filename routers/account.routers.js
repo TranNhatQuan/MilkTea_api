@@ -7,7 +7,7 @@ const { checkCreateAccount } = require("../middlewares/validates/checkCreate");
 const {authenticate} = require("../middlewares/auth/authenticate.js")
 const accountRouter = express.Router();
 
-accountRouter.post("/login", checkExistAccount(Account), authorize(1), login);
+accountRouter.post("/login", checkExistAccount(Account), login);
 //accountRouter.post("/admin/login", checkExistAccount(Account), loginAdmin);
 //accountRouter.get("/logout", authenticate, logout);
 //accountRouter.post("/create", checkCreateAccount(Account), createAccountForCustomer);

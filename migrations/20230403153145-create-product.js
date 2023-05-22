@@ -8,7 +8,7 @@ module.exports = {
         
         primaryKey: true,
         
-        type: Sequelize.INTEGER
+        type: Sequelize.STRING
       },
       idRecipe: {
         allowNull: false,
@@ -24,7 +24,7 @@ module.exports = {
       },
       quantity: {
         allowNull: false,
-        type: Sequelize.INTEGER,
+        type: Sequelize.DOUBLE,
       }
     });
   },

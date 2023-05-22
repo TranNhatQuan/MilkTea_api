@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       references: { model: "Ingredient_shops", key: "idIngredient_shop" },
       
-      type: DataTypes.INTEGER
+      type: DataTypes.STRING
     },
     date: {
       //YYYY-MM-DD

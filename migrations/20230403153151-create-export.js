@@ -9,7 +9,7 @@ module.exports = {
         primaryKey: true,
         references: { model: "Ingredient_shops", key: "idIngredient_shop" },
         
-        type: Sequelize.INTEGER
+        type: Sequelize.STRING
       },
       date: {
         type: Sequelize.DATEONLY,
