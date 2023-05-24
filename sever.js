@@ -24,6 +24,7 @@ app.use(
 //dùng router
 app.use(rootRouter);
 
+
 //lắng nghe sự kiện kết nối
 app.listen(port, async () => {
     console.log(`App listening on http://localhost:${port}`);

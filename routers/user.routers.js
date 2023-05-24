@@ -1,12 +1,11 @@
 const express = require("express");
-const { User } = require("../models")
 const { authenticate } = require("../middlewares/auth/authenticate.js")
-const { getRecommend, getAllhistory, getHistory, getInfoUser, editUser, editMenuUser,getRecipeHistory,getUser,listUser, editUserHistory,getInfo,}
+const { listStoreNearest}
     = require("../controllers/user.controllers");
 
 const userRouter = express.Router();
 
-// userRouter.get("/history/",authenticate, getAllhistory);
+userRouter.get("/getListShop", listStoreNearest);
 
 // userRouter.get("/history/:date",authenticate, getHistory);
 

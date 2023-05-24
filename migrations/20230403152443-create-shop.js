@@ -18,6 +18,16 @@ module.exports = {
         allowNull:false,
         type: Sequelize.INTEGER
       },
+      latitude:{
+        //vĩ độ
+        allowNull:false,
+        type: Sequelize.DOUBLE
+      },
+      longitude:{
+        //kinh độ
+        allowNull:false,
+        type: Sequelize.DOUBLE
+      },
       image: {
         allowNull: false,
         type: Sequelize.TEXT

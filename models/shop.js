@@ -41,6 +41,16 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       type: DataTypes.STRING
     },
+    latitude:{
+      //vĩ độ
+      allowNull:false,
+      type: DataTypes.DOUBLE
+    },
+    longitude:{
+      //kinh độ
+      allowNull:false,
+      type: DataTypes.DOUBLE
+    },
     isActive:{
       allowNull:false,
       type: DataTypes.INTEGER

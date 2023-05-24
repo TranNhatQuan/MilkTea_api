@@ -6,8 +6,6 @@ const { getRecommend, getAllhistory, getHistory, getInfoUser, editUser, editMenu
 
 const staffRouter = express.Router();
 //lay ra 1 danh sach random cac mon cho user gom 3 bua sang trua toi day du
-
-
 // staffRouter.get("/history/",authenticate, getAllhistory);
 
 // staffRouter.get("/history/:date",authenticate, getHistory);
