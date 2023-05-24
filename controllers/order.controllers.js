@@ -4,7 +4,7 @@ const { QueryTypes, Op, where } = require("sequelize");
 
 
 
-const getOptionToppings = async (req, res) => {
+const getToppingOptions = async (req, res) => {
     try {
 
         const { idRecipe } = req.params;
@@ -17,7 +17,7 @@ const getOptionToppings = async (req, res) => {
         if (detailRecipe == '') {
             return res.status(404).json({ error: 'Không tim thấy thông tin sản phẩm' });
         }
-        let optionToppings = await Recipe_type.findAll({
+        let listTopping = await Recipe_type.findAll({
             where: { idType: detailRecipe.idType },
             //attributes: [['name', 'Recipe.name']],
             attributes: [
@@ -38,7 +38,7 @@ const getOptionToppings = async (req, res) => {
             ],
             raw:true
         })
-        optionToppings = optionToppings.map(item => {
+        listTopping = listTopping.map(item => {
             return {
                 
                 idRecipe:item['idRecipe'],
@@ -52,7 +52,7 @@ const getOptionToppings = async (req, res) => {
 
 
 
-        return res.status(200).json({ isSuccess: true, optionToppings });
+        return res.status(200).json({ isSuccess: true, listTopping });
     } catch (error) {
         res.status(500).json({ error: 'Đã xảy ra lỗi' });
     }
@@ -62,5 +62,5 @@ const getOptionToppings = async (req, res) => {
 
 module.exports = {
     // getDetailTaiKhoan,
-    getOptionToppings,
+    getToppingOptions,
 };
