@@ -7,9 +7,10 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 
 const createAccountForCustomer = async (req, res) => {
-    const { phone, password, name } = req.body;
+    
    
     try {
+        const { phone, password, name } = req.body;
         //tạo ra một chuỗi ngẫu nhiên
         const salt = bcrypt.genSaltSync(10);
         //mã hoá salt + password

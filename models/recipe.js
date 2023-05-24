@@ -14,6 +14,9 @@ module.exports = (sequelize, DataTypes) => {
       Recipe.hasMany(models.Recipe_shop, {
         foreignKey: "idRecipe",
       });
+      Recipe.hasMany(models.Recipe_type, {
+        foreignKey: "idRecipe",
+      });
       Recipe.hasMany(models.Recipe_ingredient, {
         foreignKey: "idRecipe",
       });
