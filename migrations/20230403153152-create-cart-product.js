@@ -2,26 +2,28 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Products', {
+    await queryInterface.createTable('Cart_products', {
+      idCart: {
+        allowNull: false,
+        primaryKey: true,
+        references: { model: "Carts", key: "idCart" },
+        type: Sequelize.INTEGER
+      },
       idProduct: {
         allowNull: false,
-        
         primaryKey: true,
+        
+        references: { model: "Products", key: "idProduct" },
         
         type: Sequelize.STRING
       },
-      idRecipe: {
+      size:{
         allowNull: false,
-        
         primaryKey: true,
-        references: { model: "Recipes", key: "idRecipe" },
         type: Sequelize.INTEGER
       },
       
-      isMain: {
-        allowNull: false,
-        type: Sequelize.INTEGER,
-      },
+      
       quantity: {
         allowNull: false,
         type: Sequelize.INTEGER,
@@ -29,6 +31,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Products');
+    await queryInterface.dropTable('Cart_products');
   }
 };

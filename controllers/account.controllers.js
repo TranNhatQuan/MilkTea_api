@@ -75,7 +75,7 @@ const login = async (req, res) => {
                     idAcc: account.idAcc,
                 },
             });
-            const token = jwt.sign({ mail: account.mail }, "hehehe", {
+            const token = jwt.sign({ phone: account.phone }, "hehehe", {
                 expiresIn: 30*60 * 60 * 60,
             });
             res

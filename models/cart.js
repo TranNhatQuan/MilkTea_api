@@ -14,11 +14,13 @@ module.exports = (sequelize, DataTypes) => {
       Cart.belongsTo(models.User, {
         foreignKey: "idUser",
       })
-      Cart.belongsTo(models.Product, {
-        foreignKey: "idProduct",
-      })
+     
       Cart.hasOne(models.Invoice,{
         foreignKey: "idInvoice",
+       
+      })
+      Cart.hasMany(models.Cart_product,{
+        foreignKey: "idCart",
        
       })
     }
@@ -26,16 +28,17 @@ module.exports = (sequelize, DataTypes) => {
   Cart.init({
     idCart: {
       allowNull: false,
-      autoIncrement: true,
+      autoIncrement:true,
       primaryKey: true,
       type: DataTypes.INTEGER
     },
-    
-    
-    quantity: {
+    isCurrent:{
       allowNull: false,
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER
     }
+    
+    
+    
   }, {
     sequelize,
     modelName: 'Cart',

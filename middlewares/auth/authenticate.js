@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
-
-const authenticate = (req, res, next) => {
+const { Account } = require("../../models");
+const authenticate = async (req, res, next) => {
 
   try {
     const token = req.headers.access_token;
@@ -8,10 +8,13 @@ const authenticate = (req, res, next) => {
       return res.status(403).json({ message: "Vui lòng đăng nhập!", isSuccess: false });
     }
     const data = jwt.verify(token, "hehehe");
-    req.phone = data.phone;
+    
 
-
-
+    const account = await Account.findOne({
+      where:{phone:data.phone},
+      attributes: ['idAcc','phone','role'],
+    })
+    req.account = account;
 
 
     return next();
