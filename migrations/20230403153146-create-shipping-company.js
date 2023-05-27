@@ -10,10 +10,17 @@ module.exports = {
         autoIncrement: true,
         type: Sequelize.INTEGER
       },
-      
+      name: {
+        allowNull: false,
+        type: Sequelize.STRING,
+      },
       costPerKm: {
         allowNull: false,
         type: Sequelize.INTEGER,
+      },
+      image: {
+        type: Sequelize.TEXT,
+        allowNull: false,
       }
     });
   },

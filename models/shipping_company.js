@@ -23,9 +23,17 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER
     },
+    name: {
+      allowNull: false,
+      type: DataTypes.STRING,
+    },
     costPerKm: {
       allowNull: false,
       type: DataTypes.INTEGER,
+    },
+    image: {
+      type: DataTypes.TEXT,
+      allowNull: false,
     }
   }, {
     sequelize,

@@ -1,5 +1,5 @@
 const { raw } = require("body-parser");
-const { Shop, Recipe_shop, Recipe, Recipe_type, Cart, Cart_product, Product } = require("../models");
+const { Shop, Recipe_shop, Recipe, Recipe_type, Cart, Cart_product, Product, Shipping_company } = require("../models");
 const { QueryTypes, Op, where } = require("sequelize");
 
 const getToppingOfProduct = async (idProduct) => {
@@ -8,21 +8,21 @@ const getToppingOfProduct = async (idProduct) => {
         where: {
             idProduct: idProduct,
         },
-        attributes: ['idRecipe', 'quantity','isMain'],
+        attributes: ['idRecipe', 'quantity', 'isMain'],
         include: [
             {
                 model: Recipe,
                 attributes: ['price', 'name'],
             }
         ],
-        raw:true
+        raw: true
     })
     //console.log(listTopping)
     let totalProduct = 0
-    
+
     listTopping = listTopping.map(item => {
-        let totalItem = item['Recipe.price']*item['quantity']
-        totalProduct+=totalItem
+        let totalItem = item['Recipe.price'] * item['quantity']
+        totalProduct += totalItem
         return {
 
             idRecipe: item['idRecipe'],
@@ -31,7 +31,7 @@ const getToppingOfProduct = async (idProduct) => {
             isMain: item['isMain'],
         };
     });
-    return {listTopping,totalProduct};
+    return { listTopping, totalProduct };
 }
 
 const getToppingOptions = async (req, res) => {
@@ -131,6 +131,7 @@ const addToCart = async (req, res) => {
         res.status(500).json({ error: 'Đã xảy ra lỗi' });
     }
 };
+
 const getCurrentCart = async (req, res) => {
     try {
 
@@ -165,10 +166,10 @@ const getCurrentCart = async (req, res) => {
             raw: true,
             //nest:true,
         })
-        let total= 0
+        let total = 0
         const promises = cart.map(async item => {
-            let {listTopping,totalProduct} = await getToppingOfProduct(item['Cart_products.idProduct'])
-            total+=totalProduct*item['Cart_products.quantity']
+            let { listTopping, totalProduct } = await getToppingOfProduct(item['Cart_products.idProduct'])
+            total += totalProduct * item['Cart_products.quantity']
             return {
 
                 idCart: item['idCart'],
@@ -178,18 +179,53 @@ const getCurrentCart = async (req, res) => {
                 quantityProduct: item['Cart_products.quantity'],
                 image: item['Cart_products.Product.Recipe.image'],
                 listTopping,
-                totalProducts:totalProduct*item['Cart_products.quantity']
+                totalProducts: totalProduct * item['Cart_products.quantity']
             };
         });
         cart = await Promise.all(promises);
         //console.log(listTopping)
-        return res.status(200).json({ isSuccess: true, cart,total });
+        return res.status(200).json({ isSuccess: true, cart, total });
     } catch (error) {
         res.status(500).json({ error: 'Đã xảy ra lỗi' });
     }
 };
+const getShipFee = async (req, res) => {
+    try {
 
+        //const user = req.user;
+
+        const distance = Number(req.query.distance)
+        const idShipping_company = Number(req.query.idShipping_company)
+        const shipping_company = await Shipping_company.findOne({
+            where: { idShipping_company },
+            raw: true,
+        })
+        let total = (distance / 1000) * shipping_company.costPerKm
+
+        //console.log(listTopping)
+        return res.status(200).json({ isSuccess: true, total });
+    } catch (error) {
+        res.status(500).json({ error: 'Đã xảy ra lỗi' });
+    }
+};
+const getListCompanies = async (req, res) => {
+    try {
+
+        //const user = req.user;
+
+        
+        const shipping_company = await Shipping_company.findAll({
+            
+        })
+     
+
+        //console.log(listTopping)
+        return res.status(200).json({ isSuccess: true, shipping_company });
+    } catch (error) {
+        res.status(500).json({ error: 'Đã xảy ra lỗi' });
+    }
+};
 module.exports = {
     // getDetailTaiKhoan,
-    getToppingOptions, addToCart, getCurrentCart
+    getToppingOptions, addToCart, getCurrentCart, getShipFee, getListCompanies
 };
