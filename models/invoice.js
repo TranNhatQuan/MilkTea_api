@@ -15,9 +15,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "idShipping_company",
       })
       
-      Invoice.belongsTo(models.Staff, {
-        foreignKey: "idStaff",
-      })
+    
       
       Invoice.belongsTo(models.Cart,{
         foreignKey: "idCart",

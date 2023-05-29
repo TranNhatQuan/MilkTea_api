@@ -1,8 +1,8 @@
 const { raw } = require("body-parser");
-const { Shop, Recipe_shop, Recipe, Recipe_type, Cart, Cart_product, Product, Shipping_company } = require("../models");
+const { Shop, Recipe_shop, Recipe, Recipe_type, Cart, Cart_product, Product, Shipping_company, Invoice } = require("../models");
 const { QueryTypes, Op, where } = require("sequelize");
 
-const getToppingOfProduct = async (idProduct) => {
+const getToppingOfProduct = async (idProduct, idShop) => {
     //console.log('test')
     let listTopping = await Product.findAll({
         where: {
@@ -13,15 +13,21 @@ const getToppingOfProduct = async (idProduct) => {
             {
                 model: Recipe,
                 attributes: ['price', 'name'],
+                include:[{
+                    model: Recipe_shop,
+                    where:{idShop},
+                    attributes: ['discount'],
+                }]
             }
         ],
         raw: true
     })
     //console.log(listTopping)
     let totalProduct = 0
-
+    console.log(listTopping)
     listTopping = listTopping.map(item => {
-        let totalItem = item['Recipe.price'] * item['quantity']
+        //console.log(item['Recipe.Recipe_shop.discount'])
+        let totalItem = item['Recipe.price'] * item['quantity']*(item['Recipe.Recipe_shops.discount']/100)
         totalProduct += totalItem
         return {
 
@@ -29,11 +35,75 @@ const getToppingOfProduct = async (idProduct) => {
             name: item['Recipe.name'],
             quantity: item['quantity'],
             isMain: item['isMain'],
+            price: item['Recipe.price'],
+            discount: item['Recipe.Recipe_shops.discount'],
         };
     });
     return { listTopping, totalProduct };
 }
 
+
+const getCurrentCartAndTotal = async(user,idShop)=>{
+    
+    let cart = await Cart.findAll({
+        where: {
+            idUser: user.idUser,
+            isCurrent: 1,
+        },
+
+        include: [
+            {
+                model: Cart_product,
+                attributes: ['idProduct', 'size', 'quantity'],
+                required: false,
+                include: [
+                    {
+                        model: Product,
+                        required: false,
+                        where: { isMain: 1 },
+                        attributes: ['quantity'],
+                        include: [{
+                            model: Recipe,
+                            attributes: ['name', 'image'],
+                        }]
+                    }
+                ]
+            }
+        ],
+        raw: true,
+        //nest:true,
+    })
+    let total = 0
+    const promises = cart.map(async item => {
+        let { listTopping, totalProduct } = await getToppingOfProduct(item['Cart_products.idProduct'], idShop)
+        total += totalProduct * item['Cart_products.quantity']
+        return {
+
+            idCart: item['idCart'],
+            name: item['Cart_products.Product.Recipe.name'],
+            idProduct: item['Cart_products.idProduct'],
+            size: item['Cart_products.size'],
+            quantityProduct: item['Cart_products.quantity'],
+            image: item['Cart_products.Product.Recipe.image'],
+            listTopping,
+            totalProducts: totalProduct * item['Cart_products.quantity']
+        };
+    });
+    cart = await Promise.all(promises);
+    return {cart, total}
+}
+const createInvoice = async (user, shippingFee, idShipping_company,idShop) => {
+    //console.log('test')
+    const{cart, total} = await getCurrentCartAndTotal(user,idShop)
+    
+    
+    let invoice = await Invoice.create({
+
+    })
+
+    
+    return ;
+}
 const getToppingOptions = async (req, res) => {
     try {
 
@@ -136,53 +206,10 @@ const getCurrentCart = async (req, res) => {
     try {
 
         const user = req.user;
+        const {idShop} = req.params
 
 
-        let cart = await Cart.findAll({
-            where: {
-                idUser: user.idUser,
-                isCurrent: 1,
-            },
-
-            include: [
-                {
-                    model: Cart_product,
-                    attributes: ['idProduct', 'size', 'quantity'],
-                    required: false,
-                    include: [
-                        {
-                            model: Product,
-                            required: false,
-                            where: { isMain: 1 },
-                            attributes: ['quantity'],
-                            include: [{
-                                model: Recipe,
-                                attributes: ['name', 'image'],
-                            }]
-                        }
-                    ]
-                }
-            ],
-            raw: true,
-            //nest:true,
-        })
-        let total = 0
-        const promises = cart.map(async item => {
-            let { listTopping, totalProduct } = await getToppingOfProduct(item['Cart_products.idProduct'])
-            total += totalProduct * item['Cart_products.quantity']
-            return {
-
-                idCart: item['idCart'],
-                name: item['Cart_products.Product.Recipe.name'],
-                idProduct: item['Cart_products.idProduct'],
-                size: item['Cart_products.size'],
-                quantityProduct: item['Cart_products.quantity'],
-                image: item['Cart_products.Product.Recipe.image'],
-                listTopping,
-                totalProducts: totalProduct * item['Cart_products.quantity']
-            };
-        });
-        cart = await Promise.all(promises);
+        const{cart, total} = await getCurrentCartAndTotal(user,idShop)
         //console.log(listTopping)
         return res.status(200).json({ isSuccess: true, cart, total });
     } catch (error) {
@@ -225,7 +252,25 @@ const getListCompanies = async (req, res) => {
         res.status(500).json({ error: 'Đã xảy ra lỗi' });
     }
 };
+const createInvoiceAndSubIngredient = async (req, res) => {
+    try {
+        const {idShipping_company,shippingFee} = req.body;
+        if (idShipping_company === '' && shippingFee === '') {
+            return res.status(400).json({ isSuccess: false });
+          }
+        
+
+        
+        
+     
+
+        //console.log(listTopping)
+        return res.status(200).json({ isSuccess: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Đã xảy ra lỗi' });
+    }
+};
 module.exports = {
     // getDetailTaiKhoan,
-    getToppingOptions, addToCart, getCurrentCart, getShipFee, getListCompanies
+    getToppingOptions, addToCart, getCurrentCart, getShipFee, getListCompanies, createInvoiceAndSubIngredient
 };
