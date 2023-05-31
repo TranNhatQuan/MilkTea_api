@@ -1,18 +1,21 @@
 const express = require("express");
 
 const { getToppingOptions, addToCart, getCurrentCart,
-        getShipFee, getListCompanies, createInvoiceAndSubIngredient } = require("../controllers/order.controllers");
+        getShipFee, getListCompanies, createInvoiceAndSubIngredient,
+        editCart, confirmDeleteProductCart } = require("../controllers/order.controllers");
 const { checkExistProduct, checkExistCurrentCart, checkExistProductCartAndDel } = require("../middlewares/validates/checkExist");
 const { authorize } = require("../middlewares/auth/authorize.js")
 const { authenticate } = require("../middlewares/auth/authenticate.js")
 const orderRouter = express.Router();
 
-orderRouter.get("/topping/:idRecipe", getToppingOptions);
+orderRouter.get("/topping", getToppingOptions);
 orderRouter.get("/currentCart/:idShop", authenticate, authorize(0), getCurrentCart);
 orderRouter.get("/getShipFee", getShipFee);
 orderRouter.get("/getListCompanies", getListCompanies);
 orderRouter.post("/createInvoice",authenticate, authorize(0),checkExistCurrentCart(),createInvoiceAndSubIngredient)
 orderRouter.post("/addToCart", authenticate, authorize(0), checkExistProduct(), checkExistCurrentCart(), addToCart)
+orderRouter.delete("/deleteProductCart", authenticate, authorize(0), checkExistCurrentCart(),editCart)
+orderRouter.delete("/deleteProductCart/:oldIdProduct", authenticate, authorize(0), checkExistCurrentCart(), checkExistProductCartAndDel(),confirmDeleteProductCart)
 orderRouter.post("/editProductCart/:oldIdProduct", authenticate, authorize(0), checkExistProduct(), checkExistCurrentCart(),checkExistProductCartAndDel(), addToCart)
 module.exports = {
     orderRouter,

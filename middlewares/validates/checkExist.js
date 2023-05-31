@@ -129,6 +129,9 @@ const checkExistProductCartAndDel = () => {
     try {
       const { oldIdProduct } = req.params;
       const currentCart = req.currentCart
+      if (oldIdProduct=='' ) {
+        return res.status(400).json({ isSuccess: false });
+    }
       // const idProduct = req.idProduct;
       let cartProduct = await Cart_product.findOne({
         where: {
