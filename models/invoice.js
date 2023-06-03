@@ -21,6 +21,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "idCart",
        
       });
+      Invoice.belongsTo(models.Shop,{
+        foreignKey: "idShop",
+       
+      });
     }
   }
   Invoice.init({
@@ -30,6 +34,7 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER
     },
+    
     shippingFee: {
       allowNull: false,
 

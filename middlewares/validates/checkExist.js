@@ -1,4 +1,4 @@
-const { Product, Cart, Cart_product } = require("../../models");
+const { Product, Cart, Cart_product, Invoice } = require("../../models");
 
 const createProduct = async (idProduct) => {
   let productList = idProduct.substring(1)
@@ -24,7 +24,29 @@ const createProduct = async (idProduct) => {
   }
   return createdProducts;
 }
-
+const takeIngredient = async (idCart) => {
+  let cartProducts = await Cart_product.findAll({
+    where: { idCart },
+    include: [
+      {
+        model: Product,
+        required: false,
+        where: { isMain: 1 },
+        attributes: ['quantity'],
+        include: [{
+          model: Recipe,
+          attributes: ['name', 'image', 'price'],
+          include: [{
+            model: Recipe_shop,
+            where: { idShop, isActive: 1 },
+            attributes: ['discount'],
+          }]
+        }]
+      }
+    ]
+  })
+  return cartProducts;
+}
 const checkExistAccount = (Model) => {
   return async (req, res, next) => {
     try {
@@ -53,7 +75,7 @@ const checkExistProduct = () => {
     try {
       const { idRecipe, quantity } = req.body;
       //console.log(idRecipe)
-      if (idRecipe === '' && quantity === '') {
+      if (idRecipe === '' || quantity === '') {
         return res.status(400).json({ isSuccess: false });
       }
       //console.log('test')
@@ -129,9 +151,9 @@ const checkExistProductCartAndDel = () => {
     try {
       const { oldIdProduct } = req.params;
       const currentCart = req.currentCart
-      if (oldIdProduct=='' ) {
+      if (oldIdProduct == '') {
         return res.status(400).json({ isSuccess: false });
-    }
+      }
       // const idProduct = req.idProduct;
       let cartProduct = await Cart_product.findOne({
         where: {
@@ -141,7 +163,7 @@ const checkExistProductCartAndDel = () => {
         }
 
       })
-      if(cartProduct!=null){
+      if (cartProduct != null) {
         await cartProduct.destroy();
         next();
       }
@@ -155,7 +177,89 @@ const checkExistProductCartAndDel = () => {
   }
 
 };
+const checkExistInvoiceLessThan5 = () => {
+  return async (req, res, next) => {
+    try {
+      //console.log('test')
+      
+      const user = req.user;
+        const invoice = await Invoice.findOne({
+            where:{status:{[Op.lt]:5}  },
+            attributes:[],
+            include:[
+                {
+                    model:Cart,
+                    required:true,
+                    where:{idUser:user.idUser},
+                    attributes:[]
+                }
+            ]
+        })
+      
+      
+      
+      // const idProduct = req.idProduct;
+      
+      if (invoice == null) {
+
+        next();
+      }
+      else{
+        return res.status(400).json({ isSuccess: false,mes:'Đơn hàng hiên tại chưa hoàn thành' });
+      }
+
+
+      //console.log('test1')
+
+    } catch (error) {
+      return res.status(500).send({ isSuccess: false, isExist: false, mes: 'checkInvoiceStatus0' });
+    }
+  }
+
+};
+const checkExistInvoiceStatus0 = () => {
+  return async (req, res, next) => {
+    try {
+      //console.log('test')
+      const{idInvoice} = req.body
+      const currentCart = req.currentCart
+     
+      if(idInvoice===undefined){
+        return res.status(400).json({ isSuccess: false });
+      }
+      if(idInvoice===''){
+        return res.status(400).json({ isSuccess: false });
+      }
+      
+      // const idProduct = req.idProduct;
+     
+      let invoice = await Invoice.findOne({
+        where: {
+          idInvoice,
+          status: 0,
+        }
+      })
+      console.log('tesr1')
+      if (invoice != null) {
+        req.invoice = invoice
+
+        next();
+      }
+      else{
+        return res.status(400).json({ isSuccess: false });
+      }
+
+
+      //console.log('test1')
+
+    } catch (error) {
+      return res.status(500).send({ isSuccess: false, isExist: false, mes: 'checkInvoiceStatus0' });
+    }
+  }
+
+};
 module.exports = {
 
-  checkExistAccount, checkExistProduct, checkExistCurrentCart, checkExistProductCartAndDel
+  checkExistAccount, checkExistProduct, checkExistCurrentCart, checkExistProductCartAndDel, checkExistInvoiceStatus0,
+  checkExistInvoiceLessThan5
 };

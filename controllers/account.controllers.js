@@ -84,7 +84,7 @@ const login = async (req, res) => {
                     customer,
                     isSuccess : true,
                     token,
-    
+                    phone,
                     expireTime: 30*60 * 60 * 60,
                 });
         } else {

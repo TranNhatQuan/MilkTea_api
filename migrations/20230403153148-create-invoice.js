@@ -17,8 +17,12 @@ module.exports = {
         references: { model: "Carts", key: "idCart" },
         type: Sequelize.INTEGER
       },
-      
-      shippingCompany: {
+      idShop: {
+        allowNull: false,
+        references: { model: "Shops", key: "idShop" },
+        type: Sequelize.INTEGER
+      },
+      idShipping_company: {
         allowNull: false,
         references: { model: "Shipping_companies", key: "idShipping_company" },
         type: Sequelize.INTEGER,
