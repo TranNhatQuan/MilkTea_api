@@ -70,7 +70,7 @@ const login = async (req, res) => {
         const isAuth = bcrypt.compareSync(password, account.password);
         
         if (isAuth) {
-            const customer = await User.findOne({
+            let customer = await User.findOne({
                 where: {
                     idAcc: account.idAcc,
                 },
@@ -78,13 +78,14 @@ const login = async (req, res) => {
             const token = jwt.sign({ phone: account.phone }, "hehehe", {
                 expiresIn: 30*60 * 60 * 60,
             });
+            customer.dataValues.phone = phone,
             res
                 .status(200)
                 .json({
                     customer,
                     isSuccess : true,
                     token,
-                    phone,
+                    
                     expireTime: 30*60 * 60 * 60,
                 });
         } else {

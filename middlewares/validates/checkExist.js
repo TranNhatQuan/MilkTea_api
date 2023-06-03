@@ -185,7 +185,7 @@ const checkExistInvoiceLessThan5 = () => {
       const user = req.user;
         const invoice = await Invoice.findOne({
             where:{status:{[Op.lt]:5}  },
-            attributes:[],
+            //attributes:[],
             include:[
                 {
                     model:Cart,
