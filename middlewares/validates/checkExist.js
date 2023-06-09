@@ -1,5 +1,5 @@
 const { Product, Cart, Cart_product, Invoice } = require("../../models");
-
+const { QueryTypes, Op, where, STRING } = require("sequelize");
 const createProduct = async (idProduct) => {
   let productList = idProduct.substring(1)
   productList = productList.split(';'); // Tách các cặp idRecipe và quantity
@@ -180,32 +180,36 @@ const checkExistProductCartAndDel = () => {
 const checkExistInvoiceLessThan5 = () => {
   return async (req, res, next) => {
     try {
-      //console.log('test')
-      
+      //console.log('test1')
+
       const user = req.user;
-        const invoice = await Invoice.findOne({
-            where:{status:{[Op.lt]:5}  },
-            //attributes:[],
-            include:[
-                {
-                    model:Cart,
-                    required:true,
-                    where:{idUser:user.idUser},
-                    attributes:[]
-                }
-            ]
-        })
-      
-      
-      
+      //console.log(user)
+      const invoice = await Invoice.findOne({
+        where: { 
+          status: { [Op.lt]: 5 } 
+        },
+        //attributes:[],
+        include: [
+          {
+            model: Cart,
+            required: true,
+            where: { idUser: user.idUser },
+            attributes: []
+          }
+        ]
+      })
+      //console.log('test')
+
+
       // const idProduct = req.idProduct;
-      
+
       if (invoice == null) {
 
         next();
       }
-      else{
-        return res.status(400).json({ isSuccess: false,mes:'Đơn hàng hiên tại chưa hoàn thành' });
+      else {
+        let idInvoice = invoice.idInvoice
+        return res.status(400).json({ isSuccess: false, mes: 'Đơn hàng hiên tại chưa hoàn thành', idInvoice });
       }
 
 
@@ -221,18 +225,18 @@ const checkExistInvoiceStatus0 = () => {
   return async (req, res, next) => {
     try {
       //console.log('test')
-      const{idInvoice} = req.body
+      const { idInvoice } = req.body
       const currentCart = req.currentCart
-     
-      if(idInvoice===undefined){
+
+      if (idInvoice === undefined) {
         return res.status(400).json({ isSuccess: false });
       }
-      if(idInvoice===''){
+      if (idInvoice === '') {
         return res.status(400).json({ isSuccess: false });
       }
-      
+
       // const idProduct = req.idProduct;
-     
+
       let invoice = await Invoice.findOne({
         where: {
           idInvoice,
@@ -245,7 +249,7 @@ const checkExistInvoiceStatus0 = () => {
 
         next();
       }
-      else{
+      else {
         return res.status(400).json({ isSuccess: false });
       }
 

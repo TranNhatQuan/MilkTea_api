@@ -25,7 +25,11 @@ module.exports = {
       discount: {
         allowNull: false,
         type: Sequelize.INTEGER,
-      }
+      },
+      quantity: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+      },
     });
   },
   async down(queryInterface, Sequelize) {

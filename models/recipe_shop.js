@@ -40,7 +40,11 @@ module.exports = (sequelize, DataTypes) => {
     discount: {
       allowNull: false,
       type: DataTypes.INTEGER,
-    }
+    },
+    quantity: {
+      allowNull: false,
+      type: DataTypes.INTEGER,
+    },
   }, {
     sequelize,
     modelName: 'Recipe_shop',

@@ -1,4 +1,4 @@
-const { Account, User} = require("../models");
+const { Account, User, Staff} = require("../models");
 const moment = require('moment-timezone'); // require
 
 const { QueryTypes } = require("sequelize");
@@ -70,11 +70,22 @@ const login = async (req, res) => {
         const isAuth = bcrypt.compareSync(password, account.password);
         
         if (isAuth) {
-            let customer = await User.findOne({
-                where: {
-                    idAcc: account.idAcc,
-                },
-            });
+            let customer
+            if(account.role==0){{
+                customer = await User.findOne({
+                    where: {
+                        idAcc: account.idAcc,
+                    },
+                });
+            }}
+            else{
+                customer = await Staff.findOne({
+                    where: {
+                        idAcc: account.idAcc,
+                    },
+                });
+            }
+            
             const token = jwt.sign({ phone: account.phone }, "hehehe", {
                 expiresIn: 30*60 * 60 * 60,
             });
