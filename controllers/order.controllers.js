@@ -491,6 +491,23 @@ const getDetailInvoice = async (req, res) => {
         res.status(500).json({ error: 'Đã xảy ra lỗi' });
     }
 };
+const changeStatusInvoice = async (req, res) => {
+    try {
+        //const idProduct = req.idProduct;
+        const status = req.status
+        let invoice = req.invoice
+
+        
+        invoice.status = status
+        await invoice.save()
+
+
+
+        return res.status(200).json({ isSuccess: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Đã xảy ra lỗi' });
+    }
+};
 const confirmInvoice = async (req, res) => {
     try {
         //const idProduct = req.idProduct;
@@ -572,7 +589,7 @@ const cancelInvoice = async (req, res) => {
         const user = req.user;
 
         const invoice = await Invoice.findOne({
-            where: { status: { [Op.lt]: 5 } },
+            where: { status: { [Op.lt]: 4 } },
             include: [
                 {
                     model: Cart,
@@ -586,10 +603,10 @@ const cancelInvoice = async (req, res) => {
 
         if (invoice.status == 0) {
             await invoice.destroy();
-            return res.status(200).json({ isSuccess: true, mes: "Đã huỷ thành công hoá đơn chưa thanh toán" });
+            return res.status(200).json({ isSuccess: true,isCancel:true, mes: "Đã huỷ thành công hoá đơn chưa thanh toán" });
         }
         else {
-            return res.status(200).json({ isSuccess: true, mes: "Chưa xử lý trường hợp huỷ hoá đã thanh toán" });
+            return res.status(200).json({ isSuccess: true,isCancel:false, mes: "Chưa xử lý trường hợp huỷ hoá đã thanh toán" });
         }
 
 
@@ -602,7 +619,7 @@ const getCurrentInvoice = async (req, res) => {
 
         const user = req.user;
         const invoice = await Invoice.findOne({
-            where: { status: { [Op.lt]: 5 } },
+            where: { status: { [Op.lt]: 4 } },
             include: [
                 {
                     model: Cart,
@@ -727,5 +744,5 @@ const getAllOrder = async (req, res) => {
 module.exports = {
     // getDetailTaiKhoan,
     getToppingOptions, editCart, addToCart, getCurrentCart, getShipFee, getListCompanies, createInvoice, confirmDeleteProductCart,
-    confirmInvoice, getCurrentInvoice, getAllInvoiceUser, getDetailInvoice, cancelInvoice, getAllOrder
+    confirmInvoice, getCurrentInvoice, getAllInvoiceUser, getDetailInvoice, cancelInvoice, getAllOrder, changeStatusInvoice
 };

@@ -51,7 +51,7 @@ const checkExistAccount = (Model) => {
   return async (req, res, next) => {
     try {
       const { phone } = req.body;
-      console.log('check')
+      
       const account = await Model.findOne({
         where: {
           phone,
@@ -59,6 +59,7 @@ const checkExistAccount = (Model) => {
       });
       if (account) {
         console.log('check1')
+        req.account= account
         next();
       } else {
         res.status(404).send({ message: "Không tìm thấy tài khoản!", isSuccess: false, isExist: false, status: true });
@@ -177,7 +178,7 @@ const checkExistProductCartAndDel = () => {
   }
 
 };
-const checkExistInvoiceLessThan5 = () => {
+const checkExistInvoiceLessThan4 = () => {
   return async (req, res, next) => {
     try {
       //console.log('test1')
@@ -186,7 +187,7 @@ const checkExistInvoiceLessThan5 = () => {
       //console.log(user)
       const invoice = await Invoice.findOne({
         where: { 
-          status: { [Op.lt]: 5 } 
+          status: { [Op.lt]: 4 } 
         },
         //attributes:[],
         include: [
@@ -221,12 +222,12 @@ const checkExistInvoiceLessThan5 = () => {
   }
 
 };
-const checkExistInvoiceStatus0 = () => {
+const checkExistInvoiceStatus = (status) => {
   return async (req, res, next) => {
     try {
-      //console.log('test')
+      
       const { idInvoice } = req.body
-      const currentCart = req.currentCart
+      
 
       if (idInvoice === undefined) {
         return res.status(400).json({ isSuccess: false });
@@ -240,21 +241,21 @@ const checkExistInvoiceStatus0 = () => {
       let invoice = await Invoice.findOne({
         where: {
           idInvoice,
-          status: 0,
+          status: status,
         }
       })
-      console.log('tesr1')
+      
       if (invoice != null) {
         req.invoice = invoice
-
+        req.status = status+1
         next();
       }
       else {
-        return res.status(400).json({ isSuccess: false });
+        return res.status(400).json({ isSuccess: false, mes:" idInvoice sai hoặc hoá đơn không còn ở trạng thái này" });
       }
 
 
-      //console.log('test1')
+      
 
     } catch (error) {
       return res.status(500).send({ isSuccess: false, isExist: false, mes: 'checkInvoiceStatus0' });
@@ -262,8 +263,9 @@ const checkExistInvoiceStatus0 = () => {
   }
 
 };
+
 module.exports = {
 
-  checkExistAccount, checkExistProduct, checkExistCurrentCart, checkExistProductCartAndDel, checkExistInvoiceStatus0,
-  checkExistInvoiceLessThan5
+  checkExistAccount, checkExistProduct, checkExistCurrentCart, checkExistProductCartAndDel, 
+  checkExistInvoiceLessThan4, checkExistInvoiceStatus
 };
