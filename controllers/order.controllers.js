@@ -497,7 +497,7 @@ const changeStatusInvoice = async (req, res) => {
         const status = req.status
         let invoice = req.invoice
 
-        
+
         invoice.status = status
         await invoice.save()
 
@@ -589,7 +589,7 @@ const cancelInvoice = async (req, res) => {
         const user = req.user;
 
         const invoice = await Invoice.findOne({
-            where: { status: { [Op.lt]: 4 } },
+            where: { status: { [Op.lt]: 3 } },
             include: [
                 {
                     model: Cart,
@@ -603,10 +603,10 @@ const cancelInvoice = async (req, res) => {
 
         if (invoice.status == 0) {
             await invoice.destroy();
-            return res.status(200).json({ isSuccess: true,isCancel:true, mes: "Đã huỷ thành công hoá đơn chưa thanh toán" });
+            return res.status(200).json({ isSuccess: true, isCancel: true, mes: "Đã huỷ thành công hoá đơn chưa thanh toán" });
         }
         else {
-            return res.status(200).json({ isSuccess: true,isCancel:false, mes: "Chưa xử lý trường hợp huỷ hoá đã thanh toán" });
+            return res.status(200).json({ isSuccess: true, isCancel: false, mes: "Chưa xử lý trường hợp huỷ hoá đã thanh toán" });
         }
 
 
@@ -702,6 +702,99 @@ const createInvoice = async (req, res) => {
         res.status(500).json({ error: 'Đã xảy ra lỗi' });
     }
 };
+
+const getAllOrderInTransit = async (req, res) => {
+    try {
+        const staff = req.staff
+
+        let invoices = await Invoice.findAll({
+            where: {
+                idShop: staff.idShop,
+                status: 2,
+
+            },
+            attributes: ['idInvoice', 'date', 'idCart'],
+            order: [['date', 'ASC']],
+
+            raw: true,
+        })
+
+        const promises = invoices.map(async item => {
+
+            let detail = await getDetailCart(item['idCart'])
+            //console.log(cart)
+            return {
+
+                idinvoices: item['idInvoice'],
+                date: item['date'],
+
+                detail,
+
+            };
+        });
+
+        invoices = await Promise.all(promises);
+        console.log('test2')
+
+
+        return res.status(200).json({ isSuccess: true, invoices });
+    } catch (error) {
+        res.status(500).json(error);
+    }
+};
+const getAllInvoiceByDate = async (req, res) => {
+    try {
+        const staff = req.staff
+        const { date } = req.params
+        if (date === undefined) {
+            return res.status(400).json({ isSuccess: false });
+        }
+        if (date === '') {
+            return res.status(400).json({ isSuccess: false });
+        }
+        const startDate = moment(date).startOf('day').toDate();
+        const endDate = moment(date).endOf('day').toDate();
+        let invoices = await Invoice.findAll({
+            where: {
+                idShop: staff.idShop,
+                date: {
+                    [Op.gte]: startDate,
+                    [Op.lt]: endDate
+                },
+                status: {
+                    [Op.ne]: 0
+                }
+
+            },
+            attributes: ['idInvoice', 'date', 'status', 'idCart'],
+            order: [['date', 'ASC']],
+
+            raw: true,
+        })
+
+        const promises = invoices.map(async item => {
+
+            let detail = await getDetailCart(item['idCart'])
+            //console.log(cart)
+            return {
+
+                idinvoices: item['idInvoice'],
+                date: item['date'],
+
+                detail,
+
+            };
+        });
+
+        invoices = await Promise.all(promises);
+        //console.log('test2')
+
+
+        return res.status(200).json({ isSuccess: true, invoices });
+    } catch (error) {
+        res.status(500).json(error);
+    }
+};
 const getAllOrder = async (req, res) => {
     try {
         const staff = req.staff
@@ -714,19 +807,19 @@ const getAllOrder = async (req, res) => {
             },
             attributes: ['idInvoice', 'date', 'idCart'],
             order: [['date', 'ASC']],
-           
+
             raw: true,
         })
-       
+
         const promises = invoices.map(async item => {
-            
+
             let detail = await getDetailCart(item['idCart'])
             //console.log(cart)
             return {
 
                 idinvoices: item['idInvoice'],
                 date: item['date'],
-                
+
                 detail,
 
             };
@@ -744,5 +837,7 @@ const getAllOrder = async (req, res) => {
 module.exports = {
     // getDetailTaiKhoan,
     getToppingOptions, editCart, addToCart, getCurrentCart, getShipFee, getListCompanies, createInvoice, confirmDeleteProductCart,
-    confirmInvoice, getCurrentInvoice, getAllInvoiceUser, getDetailInvoice, cancelInvoice, getAllOrder, changeStatusInvoice
+    confirmInvoice, getCurrentInvoice, getAllInvoiceUser, getDetailInvoice, cancelInvoice, getAllOrder, changeStatusInvoice,
+    getAllOrderInTransit, getAllInvoiceByDate
+
 };

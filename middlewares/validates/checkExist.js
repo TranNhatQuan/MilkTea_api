@@ -178,7 +178,7 @@ const checkExistProductCartAndDel = () => {
   }
 
 };
-const checkExistInvoiceLessThan4 = () => {
+const checkExistInvoiceLessThan3 = () => {
   return async (req, res, next) => {
     try {
       //console.log('test1')
@@ -187,7 +187,7 @@ const checkExistInvoiceLessThan4 = () => {
       //console.log(user)
       const invoice = await Invoice.findOne({
         where: { 
-          status: { [Op.lt]: 4 } 
+          status: { [Op.lt]: 3 } 
         },
         //attributes:[],
         include: [
@@ -267,5 +267,5 @@ const checkExistInvoiceStatus = (status) => {
 module.exports = {
 
   checkExistAccount, checkExistProduct, checkExistCurrentCart, checkExistProductCartAndDel, 
-  checkExistInvoiceLessThan4, checkExistInvoiceStatus
+  checkExistInvoiceLessThan3, checkExistInvoiceStatus
 };

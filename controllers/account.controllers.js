@@ -86,14 +86,14 @@ const login = async (req, res) => {
                 expiresIn: 30*60 * 60 * 60,
             });
             customer.dataValues.phone = phone
-            let role = account.role
+            customer.dataValues.role = account.role
             
             res
                 .status(200)
                 .json({
                     customer,
                     isSuccess : true,
-                    role,
+                    
                     token,
                     
                     expireTime: 30*60 * 60 * 60,
