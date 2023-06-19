@@ -32,18 +32,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     
     input:{
-      type: DataTypes.INTEGER,
+      type: DataTypes.DOUBLE,
       allowNull:false
     },
 
-    shipFee:{
-      type: DataTypes.INTEGER,
-      allowNull:false
-    },
-    totalImport:{
-      type: DataTypes.INTEGER,
-      allowNull:false
-    }
+
   }, {
     sequelize,
     modelName: 'Revenue_statistics',

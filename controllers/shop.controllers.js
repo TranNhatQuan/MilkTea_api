@@ -14,7 +14,7 @@ const menuByTypeForStaff = async (req, res) => {
                     idShop: staff.idShop,
                     
                 },
-                attributes: ['discount'],
+                attributes: ['discount','isActive'],
                 include: [{
                     model: Recipe,
                     where: { idType: { [Op.in]: listType } },
@@ -28,7 +28,7 @@ const menuByTypeForStaff = async (req, res) => {
                     idShop: staff.idShop,
                     
                 },
-                attributes: ['discount'],
+                attributes: ['discount','isActive'],
                 include: [{
                     model: Recipe,
 

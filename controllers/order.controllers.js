@@ -157,7 +157,7 @@ const getDetailCart = async (idCart) => {
                         attributes: ['quantity'],
                         include: [{
                             model: Recipe,
-                            attributes: ['name', 'image', 'price'],
+                            attributes: ['idRecipe','name', 'image', 'price'],
 
                         }]
                     }
@@ -185,7 +185,7 @@ const getDetailCart = async (idCart) => {
             size: item['Cart_products.size'],
             quantityProduct: item['Cart_products.quantity'],
             image: item['Cart_products.Product.Recipe.image'],
-
+            idRecipe: item['Cart_products.Product.Recipe.idRecipe'],
 
             listTopping,
 
@@ -619,7 +619,7 @@ const getCurrentInvoice = async (req, res) => {
 
         const user = req.user;
         const invoice = await Invoice.findOne({
-            where: { status: { [Op.lt]: 4 } },
+            where: { status: { [Op.lt]: 3 } },
             include: [
                 {
                     model: Cart,
@@ -725,7 +725,7 @@ const getAllOrderInTransit = async (req, res) => {
             //console.log(cart)
             return {
 
-                idinvoices: item['idInvoice'],
+                idInvoices: item['idInvoice'],
                 date: item['date'],
 
                 detail,
@@ -778,7 +778,7 @@ const getAllInvoiceByDate = async (req, res) => {
             //console.log(cart)
             return {
 
-                idinvoices: item['idInvoice'],
+                idInvoices: item['idInvoice'],
                 date: item['date'],
 
                 detail,
@@ -817,7 +817,7 @@ const getAllOrder = async (req, res) => {
             //console.log(cart)
             return {
 
-                idinvoices: item['idInvoice'],
+                idInvoices: item['idInvoice'],
                 date: item['date'],
 
                 detail,
@@ -838,6 +838,6 @@ module.exports = {
     // getDetailTaiKhoan,
     getToppingOptions, editCart, addToCart, getCurrentCart, getShipFee, getListCompanies, createInvoice, confirmDeleteProductCart,
     confirmInvoice, getCurrentInvoice, getAllInvoiceUser, getDetailInvoice, cancelInvoice, getAllOrder, changeStatusInvoice,
-    getAllOrderInTransit, getAllInvoiceByDate
+    getAllOrderInTransit, getAllInvoiceByDate, getDetailCart
 
 };

@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     costPerKm: {
       allowNull: false,
-      type: DataTypes.INTEGER,
+      type: DataTypes.DOUBLE,
     },
     image: {
       type: DataTypes.TEXT,

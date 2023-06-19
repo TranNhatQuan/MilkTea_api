@@ -30,12 +30,12 @@ module.exports = {
       shippingFee: {
         allowNull: false,
         
-        type: Sequelize.INTEGER,
+        type: Sequelize.DOUBLE,
       },
       total: {
         allowNull: false,
         
-        type: Sequelize.INTEGER,
+        type: Sequelize.DOUBLE,
       },
       date: {
         type: Sequelize.DATE,

@@ -9,6 +9,7 @@ const shopRouter = express.Router();
 shopRouter.get("/type", menuByTypeForUser);
 shopRouter.put("/editRecipeShop/:idRecipe",authenticate,authorize(2), editRecipeShop);
 shopRouter.get("/typeForStaff",authenticate,authorize(1), menuByTypeForStaff);
+
 module.exports = {
     shopRouter,
 }

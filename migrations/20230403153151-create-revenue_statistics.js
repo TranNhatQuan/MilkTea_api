@@ -16,18 +16,10 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       input:{
-        type: Sequelize.INTEGER,
+        type: Sequelize.DOUBLE,
         allowNull:false
       },
 
-      shipFee:{
-        type: Sequelize.INTEGER,
-        allowNull:false
-      },
-      totalImport:{
-        type: Sequelize.INTEGER,
-        allowNull:false
-      }
     });
   },
   async down(queryInterface, Sequelize) {

@@ -18,7 +18,7 @@ orderRouter.get("/getAllOrderInTransit",authenticate, authorize(1), getAllOrderI
 orderRouter.get("/getAllInvoiceByDate/:date",authenticate, authorize(1), getAllInvoiceByDate);
 orderRouter.get("/currentCart/:idShop", authenticate, authorize(0), getCurrentCart);
 orderRouter.put("/completeOrder",authenticate,authorize(1),checkExistInvoiceStatus(1),changeStatusInvoice)
-
+orderRouter.get("/reportByDate/:date", authenticate)
 orderRouter.put("/completeInvoice",authenticate,authorize(1),checkExistInvoiceStatus(2),changeStatusInvoice)
 orderRouter.get("/getShipFee", getShipFee);
 orderRouter.get("/getListCompanies", getListCompanies);

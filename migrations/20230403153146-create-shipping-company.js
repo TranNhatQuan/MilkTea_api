@@ -16,7 +16,7 @@ module.exports = {
       },
       costPerKm: {
         allowNull: false,
-        type: Sequelize.INTEGER,
+        type: Sequelize.DOUBLE,
       },
       image: {
         type: Sequelize.TEXT,

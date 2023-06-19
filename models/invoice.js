@@ -38,12 +38,12 @@ module.exports = (sequelize, DataTypes) => {
     shippingFee: {
       allowNull: false,
 
-      type: DataTypes.INTEGER,
+      type: DataTypes.DOUBLE,
     },
     total: {
       allowNull: false,
 
-      type: DataTypes.INTEGER,
+      type: DataTypes.DOUBLE,
     },
     date: {
       type: DataTypes.DATE,
