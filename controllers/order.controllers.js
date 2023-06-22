@@ -48,7 +48,7 @@ const getToppingOfProductOfInvoice = async (idProduct) => {
             name: item['Recipe.name'],
             quantity: item['quantity'],
             isMain: item['isMain'],
-
+            image: item['Recipe.image']
         }
     });
     //console.log('test1')
@@ -185,6 +185,7 @@ const getDetailCart = async (idCart) => {
             size: item['Cart_products.size'],
             quantityProduct: item['Cart_products.quantity'],
             image: item['Cart_products.Product.Recipe.image'],
+            price: item['Cart_products.Product.Recipe.price'],
             idRecipe: item['Cart_products.Product.Recipe.idRecipe'],
 
             listTopping,
@@ -766,7 +767,7 @@ const getAllInvoiceByDate = async (req, res) => {
                 }
 
             },
-            attributes: ['idInvoice', 'date', 'status', 'idCart'],
+            attributes: ['idInvoice','total', 'date', 'status', 'idCart'],
             order: [['date', 'ASC']],
 
             raw: true,
@@ -779,6 +780,7 @@ const getAllInvoiceByDate = async (req, res) => {
             return {
 
                 idInvoices: item['idInvoice'],
+                total: item['total'],
                 date: item['date'],
 
                 detail,

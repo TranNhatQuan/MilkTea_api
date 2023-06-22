@@ -3,18 +3,33 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Imports', {
-      idIngredient_shop: {
+      idImport: {
         allowNull: false,
         
         primaryKey: true,
-        references: { model: "Ingredient_shops", key: "idIngredient_shop" },
+        autoIncrement: true,
         
-        type: Sequelize.STRING
+        type: Sequelize.INTEGER
       },
-      
+      idIngredient: {
+        allowNull: false,
+        
+        
+        references: { model: "Ingredients", key: "idIngredient" },
+        
+        type: Sequelize.INTEGER
+      },
+      idShop: {
+        allowNull: false,
+        
+        
+        references: { model: "Shops", key: "idShop" },
+        
+        type: Sequelize.INTEGER
+      },
       date: {
         type: Sequelize.DATEONLY,
-        primaryKey: true,
+       
         allowNull: false,
       },
       price:{

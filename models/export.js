@@ -11,29 +11,48 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       
-      Export.belongsTo(models.Ingredient_shop, {
-        foreignKey: "idIngredient_shop",
+      Export.belongsTo(models.Ingredient, {
+        foreignKey: "idIngredient",
       })
-      
+      Export.belongsTo(models.Shop, {
+        foreignKey: "idShop",
+      })
     }
   }
   Export.init({
-    idIngredient_shop: {
+    idExport: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+     
+      
+      type: DataTypes.INTEGER
+    },
+    idIngredient: {
       allowNull: false,
       
-      primaryKey: true,
-      references: { model: "Ingredient_shops", key: "idIngredient_shop" },
       
-      type: DataTypes.STRING
+      references: { model: "Ingredient", key: "idIngredient" },
+      type: DataTypes.INTEGER,
+    },
+    idShop: {
+      allowNull: false,
+      
+     
+      references: { model: "Shop", key: "idShop" },
+      type: DataTypes.INTEGER
     },
     date: {
       //YYYY-MM-DD
       type: DataTypes.DATEONLY,
-      primaryKey: true,
+      
       allowNull: false,
-      primaryKey: true,
+     
     },
-    
+    info:{
+      allowNull:false,
+      type: DataTypes.STRING,
+    },
     quantity: {
       allowNull: false,
       type: DataTypes.INTEGER,

@@ -19,6 +19,12 @@ module.exports = (sequelize, DataTypes) => {
       Ingredient.hasMany(models.Ingredient_shop,{
         foreignKey: "idIngredient"
       })
+      Ingredient.hasMany(models.Import, {
+        foreignKey: "idIngredient_shop",
+      });
+      Ingredient.hasMany(models.Export, {
+        foreignKey: "idIngredient_shop",
+      });
     }
   }
   Ingredient.init({

@@ -17,27 +17,29 @@ module.exports = (sequelize, DataTypes) => {
       Ingredient_shop.belongsTo(models.Shop, {
         foreignKey: "idShop",
       })
-      Ingredient_shop.hasMany(models.Import, {
-        foreignKey: "idIngredient_shop",
-      });
-      Ingredient_shop.hasMany(models.Export, {
-        foreignKey: "idIngredient_shop",
-      });
+      
     }
   }
   Ingredient_shop.init({
-    idIngredient_shop: {
+    idIngredient: {
       allowNull: false,
       
       primaryKey: true,
-  
-      type: DataTypes.STRING,
+      references: { model: "Ingredient", key: "idIngredient" },
+      type: DataTypes.INTEGER,
     },
-    
+    idShop: {
+      allowNull: false,
+      
+      primaryKey: true,
+      references: { model: "Shop", key: "idShop" },
+      type: DataTypes.INTEGER
+    },
     
     quantity: {
       allowNull: false,
       type: DataTypes.INTEGER,
+      defaultValue: 0, // Giá trị mặc định là 1
     }
   }, {
     sequelize,

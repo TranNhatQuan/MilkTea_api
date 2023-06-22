@@ -1,4 +1,4 @@
-const { Shop, Recipe_shop, Recipe, Invoice } = require("../models");
+const { Shop, Recipe_shop, Recipe, Invoice, Staff, Account } = require("../models");
 const { QueryTypes, Op, where, STRING } = require("sequelize");
 const moment = require('moment-timezone'); // require
 const { getDetailCart } = require("./order.controllers")
@@ -27,13 +27,15 @@ const getTopSellerByInvoices = (listInvoices, quantity) => {
             const name = recipe.name;
             const idRecipe = recipe.idRecipe;
             const quantityProduct = recipe.quantityProduct
+            const image = recipe.image
             countProducts += quantityProduct
             if (nameCounts[name]) {
                 nameCounts[name].count+=quantityProduct;
             } else {
                 nameCounts[name] = {
                     count: quantityProduct,
-                    idRecipes: idRecipe
+                    idRecipes: idRecipe,
+                    image: image,
                 };
             }
             if(recipe.listTopping!=''){
@@ -43,14 +45,15 @@ const getTopSellerByInvoices = (listInvoices, quantity) => {
                 const nameTopping = item.name;
                 const idItem = item.idRecipe;
                 const quantity = item.quantity*quantityProduct
-                
+                const imageTopping = item.image
                 countToppings += quantity
                 if (toppingCounts[nameTopping]) {
                     toppingCounts[nameTopping].count+=quantity;
                 } else {
                     toppingCounts[nameTopping] = {
                         count: quantity,
-                        idRecipes: idItem
+                        idRecipes: idItem,
+                        image:imageTopping
                     };
                 }
             })
@@ -64,12 +67,14 @@ const getTopSellerByInvoices = (listInvoices, quantity) => {
     const topNames = sortedNames.slice(0, quantity).map((name) => ({
         name: name,
         idRecipes: nameCounts[name].idRecipes,
+        image: nameCounts[name].image,
         count: nameCounts[name].count,
     }));
    
     const topToppings = sortedToppings.slice(0, quantity).map((name) => ({
         name: name,
         idRecipes: toppingCounts[name].idRecipes,
+        image: toppingCounts[name].image,
         count: toppingCounts[name].count,
     }));
  
@@ -147,11 +152,43 @@ const getReportByDate = async (req, res) => {
         res.status(500).json({ error, mes: 'reportByDate' });
     }
 };
+const getListStaff = async (req, res) => {
+    try {
+        const staff = req.staff
+        const { date } = req.params
+        
+        let listStaffs = await Staff.findAll({
+            where: {idShop: staff.idShop},
+            attributes:['idStaff','name'],
+            include:[
+                {
+                    model: Account,
+                    attributes:['role','phone'],
+                }
+            ],
+            raw:true,
 
+        })
+        
+        listStaffs = listStaffs.map(item => {
+
+            return {
+                idStaff: item['idStaff'],
+                name: item['name'],
+                role: item['Account.role'],
+                phone: item['Account.phone'],
+    
+            }
+        });
+        return res.status(200).json({ isSuccess: true, listStaffs});
+    } catch (error) {
+        res.status(500).json({ error, mes: 'getListStaff' });
+    }
+};
 
 
 
 module.exports = {
     // getDetailTaiKhoan,
-    getReportByDate,
+    getReportByDate, getListStaff
 };

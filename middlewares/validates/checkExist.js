@@ -1,4 +1,4 @@
-const { Product, Cart, Cart_product, Invoice } = require("../../models");
+const { Product, Cart, Cart_product, Invoice,Ingredient_shop, Ingredient } = require("../../models");
 const { QueryTypes, Op, where, STRING } = require("sequelize");
 const createProduct = async (idProduct) => {
   let productList = idProduct.substring(1)
@@ -51,7 +51,7 @@ const checkExistAccount = (Model) => {
   return async (req, res, next) => {
     try {
       const { phone } = req.body;
-      
+
       const account = await Model.findOne({
         where: {
           phone,
@@ -59,7 +59,7 @@ const checkExistAccount = (Model) => {
       });
       if (account) {
         console.log('check1')
-        req.account= account
+        req.account = account
         next();
       } else {
         res.status(404).send({ message: "Không tìm thấy tài khoản!", isSuccess: false, isExist: false, status: true });
@@ -186,8 +186,8 @@ const checkExistInvoiceLessThan3 = () => {
       const user = req.user;
       //console.log(user)
       const invoice = await Invoice.findOne({
-        where: { 
-          status: { [Op.lt]: 3 } 
+        where: {
+          status: { [Op.lt]: 3 }
         },
         //attributes:[],
         include: [
@@ -225,9 +225,9 @@ const checkExistInvoiceLessThan3 = () => {
 const checkExistInvoiceStatus = (status) => {
   return async (req, res, next) => {
     try {
-      
+
       const { idInvoice } = req.body
-      
+
 
       if (idInvoice === undefined) {
         return res.status(400).json({ isSuccess: false });
@@ -244,18 +244,18 @@ const checkExistInvoiceStatus = (status) => {
           status: status,
         }
       })
-      
+
       if (invoice != null) {
         req.invoice = invoice
-        req.status = status+1
+        req.status = status + 1
         next();
       }
       else {
-        return res.status(400).json({ isSuccess: false, mes:" idInvoice sai hoặc hoá đơn không còn ở trạng thái này" });
+        return res.status(400).json({ isSuccess: false, mes: " idInvoice sai hoặc hoá đơn không còn ở trạng thái này" });
       }
 
 
-      
+
 
     } catch (error) {
       return res.status(500).send({ isSuccess: false, isExist: false, mes: 'checkInvoiceStatus0' });
@@ -263,9 +263,48 @@ const checkExistInvoiceStatus = (status) => {
   }
 
 };
+const checkExistIngredientShop = () => {
+  return async (req, res, next) => {
+    try {
 
+      const staff = req.staff
+      const { idIngredient } = req.params
+
+      if (idIngredient === '') {
+        return res.status(400).json({ isSuccess: false, mes: 'importIngredient1' });
+      }
+      if (isNaN(idIngredient)) {
+        return res.status(400).json({ isSuccess: false, mes: 'importIngredient2' });
+      }
+      
+
+      let [ingredient, created] = await Ingredient_shop.findOrCreate({
+        where: {
+          idIngredient,
+          idShop: staff.idShop,
+        }
+      });
+      //console.log(created)
+      if (ingredient != null) {
+        req.ingredient = ingredient
+        next();
+      }
+      else {
+
+        return res.status(500).send({ isSuccess: false, created, mes: 'có lỗi trong quá trình tạo ingredientShop' });;
+      }
+
+
+
+
+    } catch (error) {
+      return res.status(500).send({ isSuccess: false, mes: 'có lỗi trong quá trình tạo ingredientShop' });;
+    }
+  }
+
+};
 module.exports = {
 
-  checkExistAccount, checkExistProduct, checkExistCurrentCart, checkExistProductCartAndDel, 
-  checkExistInvoiceLessThan3, checkExistInvoiceStatus
+  checkExistAccount, checkExistProduct, checkExistCurrentCart, checkExistProductCartAndDel,
+  checkExistInvoiceLessThan3, checkExistInvoiceStatus, checkExistIngredientShop
 };
