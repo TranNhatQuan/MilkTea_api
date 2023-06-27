@@ -325,7 +325,7 @@ const importIngredient = async (req, res) => {
         const staff = req.staff
         const ingredient = req.ingredient
         const { price, quantity } = req.body;
-        const date = moment().format("YYYY-MM-DD")
+        const date = moment().format("YYYY-MM-DD HH:mm:ss")
         if (price === '' || quantity === '') {
             return res.status(400).json({ isSuccess: false, mes: 'importIngredient1' });
         }
@@ -350,7 +350,7 @@ const exportIngredient = async (req, res) => {
         const staff = req.staff
         const ingredient = req.ingredient
         const { info , quantity } = req.body;
-        const date = moment().format("YYYY-MM-DD")
+        const date = moment().format("YYYY-MM-DD HH:mm:ss")
         if (info === '' || quantity === '') {
             return res.status(400).json({ isSuccess: false, mes: 'exportIngredient1' });
         }
@@ -373,5 +373,5 @@ const exportIngredient = async (req, res) => {
 module.exports = {
     // getDetailTaiKhoan,
     menuByTypeForUser, menuByTypeForStaff, editRecipeShop, getInfoShop, editInfoShop, detailRecipe,
-    getListIngredientShop, importIngredient, exportIngredient
+    getListIngredientShop, importIngredient, exportIngredient, getIngredientByIdRecipe
 };

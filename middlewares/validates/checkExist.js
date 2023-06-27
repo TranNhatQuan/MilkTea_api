@@ -1,4 +1,4 @@
-const { Product, Cart, Cart_product, Invoice,Ingredient_shop, Ingredient } = require("../../models");
+const {Account, Product, Cart, Cart_product, Invoice,Ingredient_shop, Ingredient } = require("../../models");
 const { QueryTypes, Op, where, STRING } = require("sequelize");
 const createProduct = async (idProduct) => {
   let productList = idProduct.substring(1)
@@ -47,28 +47,38 @@ const takeIngredient = async (idCart) => {
   })
   return cartProducts;
 }
-const checkExistAccount = (Model) => {
+const checkExistAccount = () => {
   return async (req, res, next) => {
     try {
+      //console.log(1)
+      //const staff = req.staff
       const { phone } = req.body;
 
-      const account = await Model.findOne({
+      if (phone === '') {
+        return res.status(400).json({ isSuccess: false, mes: 'checkNotExistAcc1' });
+      }
+      if (isNaN(phone)) {
+        return res.status(400).json({ isSuccess: false, mes: 'checkNotExistAcc2' });
+      }
+      
+      const account = await Account.findOne({
         where: {
           phone,
         },
       });
-      if (account) {
-        console.log('check1')
-        req.account = account
+      
+      //console.log(created)
+      if (!account) {
+        return res.status(409).send({ isSuccess: false, mes: 'Tài khoản không tồn tại' });;
+      }
+      else {
+        req.account= account
         next();
-      } else {
-        res.status(404).send({ message: "Không tìm thấy tài khoản!", isSuccess: false, isExist: false, status: true });
       }
     } catch (error) {
-      res.status(500).send({ message: "Không tìm thấy tài khoản!", isSuccess: false, isExist: false, status: true });
+      return res.status(500).send({ isSuccess: false, mes: 'Có lỗi trong quá trình sửa tài khoản' });;
     }
   }
-
 };
 
 const checkExistProduct = () => {
@@ -303,8 +313,41 @@ const checkExistIngredientShop = () => {
   }
 
 };
+const checkNotExistAcount = () => {
+  return async (req, res, next) => {
+    try {
+      console.log(1)
+      //const staff = req.staff
+      const { phone } = req.body;
+
+      if (phone === '') {
+        return res.status(400).json({ isSuccess: false, mes: 'checkNotExistAcc1' });
+      }
+      if (isNaN(phone)) {
+        return res.status(400).json({ isSuccess: false, mes: 'checkNotExistAcc2' });
+      }
+      
+      const account = await Account.findOne({
+        where: {
+          phone,
+        },
+      });
+      
+      //console.log(created)
+      if (account) {
+        return res.status(409).send({ isSuccess: false, mes: 'Tài khoản đã tồn tại' });;
+      }
+      else {
+        next();
+      }
+    } catch (error) {
+      return res.status(500).send({ isSuccess: false, mes: 'Có lỗi trong quá trình tạo tài khoản' });;
+    }
+  }
+
+};
 module.exports = {
 
   checkExistAccount, checkExistProduct, checkExistCurrentCart, checkExistProductCartAndDel,
-  checkExistInvoiceLessThan3, checkExistInvoiceStatus, checkExistIngredientShop
+  checkExistInvoiceLessThan3, checkExistInvoiceStatus, checkExistIngredientShop, checkNotExistAcount
 };

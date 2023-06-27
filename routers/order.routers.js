@@ -5,7 +5,7 @@ const { getToppingOptions, addToCart, getCurrentCart,
         editCart, confirmDeleteProductCart, confirmInvoice,
         getCurrentInvoice, getAllInvoiceUser, getDetailInvoice,
         cancelInvoice, getAllOrder, changeStatusInvoice, getAllOrderInTransit,
-        getAllInvoiceByDate } = require("../controllers/order.controllers");
+        getAllInvoiceByDate, searchRecipe  } = require("../controllers/order.controllers");
 const { checkExistProduct, checkExistCurrentCart, checkExistProductCartAndDel,
         checkExistInvoiceStatus, checkExistInvoiceLessThan3 } = require("../middlewares/validates/checkExist");
 const { authorize } = require("../middlewares/auth/authorize.js")
@@ -13,6 +13,7 @@ const { authenticate } = require("../middlewares/auth/authenticate.js")
 const orderRouter = express.Router();
 
 orderRouter.get("/topping", getToppingOptions);
+orderRouter.get("/search", searchRecipe);
 orderRouter.get("/getAllOrder",authenticate, authorize(1), getAllOrder);
 orderRouter.get("/getAllOrderInTransit",authenticate, authorize(1), getAllOrderInTransit);
 orderRouter.get("/getAllInvoiceByDate/:date",authenticate, authorize(1), getAllInvoiceByDate);

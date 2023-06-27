@@ -5,6 +5,7 @@ const {shopRouter} = require("./shop.routers")
 const {recipeRouter} = require("./recipe.routers")
 const {orderRouter} = require("./order.routers")
 const {managerRouter} = require("./manager.routers")
+const {adminRouter} = require("./admin.routers")
 
 const rootRouter = express.Router();
 
@@ -14,6 +15,7 @@ rootRouter.use("/shop", shopRouter);
 rootRouter.use("/order", orderRouter);
 rootRouter.use("/recipe", recipeRouter);
 rootRouter.use("/manager", managerRouter);
+rootRouter.use("/admin", adminRouter);
 module.exports = {
     rootRouter,
 }

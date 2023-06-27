@@ -51,9 +51,55 @@ const menuByTypeForUser = async (req, res) => {
     }
 };
 
+const searchRecipe = async (req, res) => {
 
+
+    try {
+      const name = req.query.name
+      const idShop = req.query.idShop
+  
+      const recipes = await Recipe.findAll({
+        where: {
+          name: { [Op.like]: `%${name}%` }
+        },
+        attributes: ['idRecipe', 'name', 'image', 'type'],
+        //offset: limit_page[0],
+        limit: 5,
+        raw: true,
+        include: [
+          {
+            model: Recipe_shop,
+            where: { idShop: idShop, isActive: 1 },
+            required: true,
+            attributes: ['discount']
+          },
+        ]
+      });
+      recipes = recipes.map( item  => {
+
+        return {
+            idRecipe: item['idRecipe'],
+            name: item['name'],
+            image: item['image'],
+            type: item['type'],
+            discount: item['Recipe_shops.discount'],
+        }
+      })
+    
+  
+  
+      res
+        .status(200)
+        .json({
+          recipes,
+          isSuccess: true
+        });
+    } catch (error) {
+      res.status(500).json({ isSuccess: false });
+    }
+  };
 
 module.exports = {
     // getDetailTaiKhoan,
-    menuByTypeForUser,
+    menuByTypeForUser, searchRecipe
 };

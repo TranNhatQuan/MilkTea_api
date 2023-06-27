@@ -5,11 +5,13 @@ const { menuByTypeForUser, menuByTypeForStaff, editRecipeShop,
     importIngredient, exportIngredient } = require("../controllers/shop.controllers");
 const { checkExistIngredientShop } = require("../middlewares/validates/checkExist");
 const { authorize } = require("../middlewares/auth/authorize.js")
-const { authenticate } = require("../middlewares/auth/authenticate.js")
+const { authenticate } = require("../middlewares/auth/authenticate.js");
+const { searchRecipe } = require("../controllers/recipe.controllers");
 
 const shopRouter = express.Router();
 
 shopRouter.get("/type", menuByTypeForUser);
+shopRouter.get("/searchInShop", searchRecipe);
 shopRouter.get("/info", authenticate, authorize(1), getInfoShop);
 shopRouter.get("/listIngredientShop", authenticate, authorize(1), getListIngredientShop);
 shopRouter.put("/import/:idIngredient", authenticate, authorize(2), checkExistIngredientShop(), importIngredient);

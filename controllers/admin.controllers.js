@@ -339,7 +339,7 @@ const getTopSellerByInvoices = (listInvoices, quantity) => {
     return { topNames, topToppings, countProducts, countToppings, countProductWithTopping }
 }
 
-const getReportByDate = async (req, res) => {
+const getReportByDateAdmin = async (req, res) => {
     try {
         const staff = req.staff
         const { date } = req.params
@@ -367,7 +367,6 @@ const getReportByDate = async (req, res) => {
 
         let invoices = await Invoice.findAll({
             where: {
-                idShop: staff.idShop,
                 date: {
                     [Op.gte]: startDate,
                     [Op.lt]: endDate
@@ -402,7 +401,7 @@ const getReportByDate = async (req, res) => {
         countInvoices = invoices.length
         let { topNames, topToppings, countProducts, countToppings, countProductWithTopping } = getTopSellerByInvoices(invoices, quantity)
         let { totalAmountImport } = await getChangeIngredientShopInfo(staff.idShop, startDate, endDate, 0)
-        //console.log(imports,totalAmountImport, exports, filteredExports)
+      
         return res.status(200).json({ isSuccess: true, total, totalAmountImport, topNames, topToppings, countProducts, countToppings, countProductWithTopping, countInvoices });
     } catch (error) {
         res.status(500).json({ error, mes: 'reportByDate' });
@@ -473,18 +472,18 @@ const getSixMonthInputAndOuput = async (req, res) => {
         res.status(500).json({ error, mes: 'reportByDate' });
     }
 };
-const getListStaff = async (req, res) => {
+const getListManager = async (req, res) => {
     try {
-        const staff = req.staff
- 
-
-        let listStaffs = await Staff.findAll({
-            where: { idShop: staff.idShop },
-            attributes: ['idStaff', 'name'],
+        
+        
+        let listStaffs = await Account.findAll({
+            where: { role: 2 },
+            attributes: ['idAcc', 'phone'],
             include: [
                 {
-                    model: Account,
-                    attributes: ['role', 'phone'],
+                    model: Staff,
+                    attributes: ['idStaff','idShop','name'],
+                    required: true,
                 }
             ],
             raw: true,
@@ -494,10 +493,10 @@ const getListStaff = async (req, res) => {
         listStaffs = listStaffs.map(item => {
 
             return {
-                idStaff: item['idStaff'],
-                name: item['name'],
-                role: item['Account.role'],
-                phone: item['Account.phone'],
+                idStaff: item['Staff.idStaff'],
+                name: item['Staff.name'],
+                idShop: item['Staff.idShop'],
+                phone: item['phone'],
 
             }
         });
@@ -575,5 +574,5 @@ const addStaff = async (req, res) => {
 };
 module.exports = {
     // getDetailTaiKhoan,
-    getReportByDate, getListStaff, getDetailChangeIngredientShop, addStaff, editStaff, deleteStaff, getSixMonthInputAndOuput
+    getReportByDateAdmin, getListManager, getDetailChangeIngredientShop, addStaff, editStaff, deleteStaff, getSixMonthInputAndOuput
 };

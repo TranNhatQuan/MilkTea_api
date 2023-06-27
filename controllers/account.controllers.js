@@ -1,4 +1,5 @@
 const { Account, User, Staff} = require("../models");
+const db = require("../models/index");
 const moment = require('moment-timezone'); // require
 
 const { QueryTypes } = require("sequelize");
@@ -6,43 +7,62 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 
-const createAccountForCustomer = async (req, res) => {
+const createCustomerWithTransaction = async (phone, password, name) => {
+    //console.log('test1')
+    const t = await db.sequelize.transaction(); // Bắt đầu transaction
     
-   
+    let isSuccess
     try {
-        const { phone, password, name } = req.body;
-        //tạo ra một chuỗi ngẫu nhiên
+        //console.log('test2')
         const salt = bcrypt.genSaltSync(10);
-        //mã hoá salt + password
         const hashPassword = bcrypt.hashSync(password, salt);
+        //console.log('test3')
         const newAccount = await Account.create({
             phone,
             role: 0,
             password: hashPassword,
 
-        });
+        }, { transaction: t });
+        //console.log('test4')
         const newCustomer = await User.create({
             idAcc: newAccount.idAcc,
             name,
-            mail,
-            gender,
-            height,
-            weight,
-            isShare: 0,
-        });
-        const newHistory = await User_history.create({
-            idUser: newCustomer.idUser,
-            date: moment().tz('Asia/Ho_Chi_Minh').format("YYYY-MM-DD"),
-            weight: weight,
-            height: height,
-            water: 0,
-            calories_in: 0,
-            calories_out: 0,
-        });
+            isShare: 1,
 
+        }, { transaction: t });
+
+        //console.log('test5')
+        //console.log('test3')
+
+
+        await t.commit(); // Lưu thay đổi và kết thúc transaction
+        isSuccess = true
+    } catch (error) {
+        isSuccess = false
+        await t.rollback(); // Hoàn tác các thay đổi và hủy bỏ transaction
+        
+    }
+
+    return isSuccess
+}
+
+const createAccountForCustomer = async (req, res) => {
+    
+   
+    try {
+        const { phone, password, name } = req.body;
+        if (phone === '' || password === '' || name === '') {
+            return res.status(400).json({ isSuccess: false, mes: 'addStaff1' });
+        }
+        if (isNaN(phone) || password === undefined || name === undefined) {
+            return res.status(400).json({ isSuccess: false, mes: 'addStaff2' });
+        }
+        //tạo ra một chuỗi ngẫu nhiên
+        let isSuccess = await createCustomerWithTransaction(phone,password, name)
+       
         res.status(200).json({
-            isExist: false,
-            isSuccess:true
+
+            isSuccess
         });
 
     } catch (error) {

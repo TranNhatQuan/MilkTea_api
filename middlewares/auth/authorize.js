@@ -3,7 +3,7 @@ const { QueryTypes } = require("sequelize");
 
 const authorize = (role) => async (req, res, next) => {
     try {
-
+        //console.log(1)
         const account = req.account;
         if(role==0){
             
@@ -25,6 +25,7 @@ const authorize = (role) => async (req, res, next) => {
                     where:{idAcc:account.idAcc}
                 })
                 req.staff= staff 
+                //console.log('2')
                 next();
             } 
             else {

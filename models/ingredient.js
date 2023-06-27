@@ -20,10 +20,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "idIngredient"
       })
       Ingredient.hasMany(models.Import, {
-        foreignKey: "idIngredient_shop",
+        foreignKey: "idIngredient",
       });
       Ingredient.hasMany(models.Export, {
-        foreignKey: "idIngredient_shop",
+        foreignKey: "idIngredient",
       });
     }
   }
