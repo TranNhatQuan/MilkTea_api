@@ -1,5 +1,5 @@
 const { Shop, Ingredient, Recipe_shop, Recipe, Invoice, Staff, Account, Import, Export, Ingredient_shop, Revenue_statistic } = require("../models");
-const { QueryTypes, Op, where, STRING } = require("sequelize");
+const { QueryTypes, Op, where, STRING, NUMBER } = require("sequelize");
 const db = require("../models/index");
 const bcrypt = require("bcryptjs");
 const moment = require('moment-timezone'); // require
@@ -8,16 +8,16 @@ const { getDetailCart } = require("./order.controllers")
 const deleteStaffWithTransaction = async (account, staff) => {
     //console.log('test1')
     const t = await db.sequelize.transaction(); // Bắt đầu transaction
-    
+
     let isSuccess
     try {
         //console.log('test2')
-        
+
         await staff.destroy({ transaction: t });
         await account.destroy({ transaction: t });
-       
 
-     
+
+
 
 
         await t.commit(); // Lưu thay đổi và kết thúc transaction
@@ -25,16 +25,16 @@ const deleteStaffWithTransaction = async (account, staff) => {
     } catch (error) {
         isSuccess = false
         await t.rollback(); // Hoàn tác các thay đổi và hủy bỏ transaction
-        
+
     }
 
     return isSuccess
 }
 
-const createStaffWithTransaction = async (phone, password, name, idShop, role) => {
+const createManagerWithTransaction = async (phone, password, name, idShop) => {
     //console.log('test1')
     const t = await db.sequelize.transaction(); // Bắt đầu transaction
-    
+
     let isSuccess
     try {
         //console.log('test2')
@@ -43,7 +43,7 @@ const createStaffWithTransaction = async (phone, password, name, idShop, role) =
         //console.log('test3')
         const newAccount = await Account.create({
             phone,
-            role: 1,
+            role: 2,
             password: hashPassword,
 
         }, { transaction: t });
@@ -65,7 +65,7 @@ const createStaffWithTransaction = async (phone, password, name, idShop, role) =
     } catch (error) {
         isSuccess = false
         await t.rollback(); // Hoàn tác các thay đổi và hủy bỏ transaction
-        
+
     }
 
     return isSuccess
@@ -81,6 +81,67 @@ const getTotal = (listInvoices) => {
     });
 
     return total
+}
+const getTotalAndTotalImportAllShop = async (dateRangeArray) => {
+    let listTotalAndTotalAmountImpot = []
+
+    for (var i = 0; i < dateRangeArray.length; i++) {
+
+        // Lấy đối tượng dateRange tại vị trí i
+        var dateRange = dateRangeArray[i];
+
+        // Lấy các giá trị từ đối tượng dateRange
+        var startDate = dateRange.startDate;
+        var endDate = dateRange.endDate;
+        var month = dateRange.month;
+        let invoices = await Invoice.findAll({
+            where: {
+
+                date: {
+                    [Op.gte]: startDate,
+                    [Op.lt]: endDate
+                },
+                status: {
+                    [Op.ne]: 0
+                }
+
+            },
+            attributes: ['idInvoice', 'date', 'status', 'idCart', 'total'],
+            //order: [['date', 'ASC']],
+
+            raw: true,
+        })
+        let total = 0
+        const promises = invoices.map(async item => {
+
+            let detail = await getDetailCart(item['idCart'])
+            total += item['total']
+            return {
+
+                idInvoices: item['idInvoice'],
+                date: item['date'],
+
+                detail,
+
+            };
+        });
+
+        invoices = await Promise.all(promises);
+        let countInvoices = 0
+        countInvoices = invoices.length
+        // In ra các giá trị
+        let { totalAmountImport } = await getChangeIngredientShopInfoAllShop(startDate, endDate, 0)
+
+        var totalAndTotalAmountImport = {
+            month: month,
+            total: total,
+            countInvoices: countInvoices,
+            totalAmountImport: totalAmountImport
+        };
+        listTotalAndTotalAmountImpot.push(totalAndTotalAmountImport);
+
+    }
+    return listTotalAndTotalAmountImpot
 }
 const getTotalAndTotalImport = async (dateRangeArray, idShop) => {
     let listTotalAndTotalAmountImpot = []
@@ -142,6 +203,54 @@ const getTotalAndTotalImport = async (dateRangeArray, idShop) => {
 
     }
     return listTotalAndTotalAmountImpot
+}
+const getChangeIngredientShopInfoAllShop = async (startDate, endDate, type) => {
+    let imports = await Import.findAll({
+        where: {
+
+            date: {
+                [Op.gte]: startDate,
+                [Op.lt]: endDate
+            },
+        },
+        attributes: ['idImport', 'idIngredient', 'date', 'price', 'quantity'],
+
+        raw: true,
+    })
+    let totalAmountImport = 0;
+
+
+    imports.forEach(importItem => {
+        const price = importItem.price;
+        const quantity = importItem.quantity;
+
+        const importAmount = price * quantity;
+        totalAmountImport += importAmount;
+    });
+    if (type == 1) {
+        let exports = await Export.findAll({
+            where: {
+                idShop: idShop,
+                date: {
+                    [Op.gte]: startDate,
+                    [Op.lt]: endDate
+                },
+            },
+            attributes: ['idExport', 'idIngredient', 'date', 'info', 'quantity'],
+
+            raw: true,
+        })
+        let exportsWithoutBH = exports.filter(exportItem => !exportItem.info.startsWith('BH'));
+        let exportsBH = exports.filter(exportItem => exportItem.info.startsWith('BH'));
+        exportsBH = await getDetailChangeIngredient(exportsBH, 1)
+        exportsWithoutBH = await getDetailChangeIngredient(exportsWithoutBH, 1)
+        imports = await getDetailChangeIngredient(imports, 0)
+        //console.log(exports)
+
+        //console.log(imports, totalAmoutImport, exports, filteredExports)
+        return { imports, totalAmountImport, exportsBH, exportsWithoutBH }
+    } else return { totalAmountImport }
+
 }
 const getChangeIngredientShopInfo = async (idShop, startDate, endDate, type) => {
     let imports = await Import.findAll({
@@ -339,110 +448,43 @@ const getTopSellerByInvoices = (listInvoices, quantity) => {
     return { topNames, topToppings, countProducts, countToppings, countProductWithTopping }
 }
 
-const getReportByDateAdmin = async (req, res) => {
-    try {
-        const staff = req.staff
-        const { date } = req.params
-        if (req.query.quantity == '' || req.query.quantity == undefined) {
-            return res.status(400).json({ isSuccess: false });
-        }
-        const quantity = req.query.quantity;
-        if (req.query.type == '' || req.query.type == undefined) {
-            return res.status(400).json({ isSuccess: false });
-        }
-        const type = req.query.type
-        let startDate, endDate
-        if (type == 'day' || type == 'month' || type == 'year') {
-            startDate = moment(date).startOf(type).toDate();
-            endDate = moment(date).endOf(type).toDate();
-        }
-        else return res.status(400).json({ isSuccess: false, mes: 'type sai' });
-        if (date === undefined) {
-            return res.status(400).json({ isSuccess: false });
-        }
-        if (date === '') {
-            return res.status(400).json({ isSuccess: false });
-        }
 
 
-        let invoices = await Invoice.findAll({
-            where: {
-                date: {
-                    [Op.gte]: startDate,
-                    [Op.lt]: endDate
-                },
-                status: {
-                    [Op.ne]: 0
-                }
-
-            },
-            attributes: ['idInvoice', 'date', 'status', 'idCart', 'total'],
-            //order: [['date', 'ASC']],
-
-            raw: true,
-        })
-        let total = 0
-        const promises = invoices.map(async item => {
-
-            let detail = await getDetailCart(item['idCart'])
-            total += item['total']
-            return {
-
-                idInvoices: item['idInvoice'],
-                date: item['date'],
-
-                detail,
-
-            };
-        });
-
-        invoices = await Promise.all(promises);
-        let countInvoices = 0
-        countInvoices = invoices.length
-        let { topNames, topToppings, countProducts, countToppings, countProductWithTopping } = getTopSellerByInvoices(invoices, quantity)
-        let { totalAmountImport } = await getChangeIngredientShopInfo(staff.idShop, startDate, endDate, 0)
-      
-        return res.status(200).json({ isSuccess: true, total, totalAmountImport, topNames, topToppings, countProducts, countToppings, countProductWithTopping, countInvoices });
-    } catch (error) {
-        res.status(500).json({ error, mes: 'reportByDate' });
-    }
-};
-const getDetailChangeIngredientShop = async (req, res) => {
-    try {
-        const staff = req.staff
-        const { date } = req.params
-
-
-        if (req.query.type == '' || req.query.type == undefined) {
-            return res.status(400).json({ isSuccess: false });
-        }
-        const type = req.query.type
-        let startDate, endDate
-        if (type == 'day' || type == 'month' || type == 'year') {
-            startDate = moment(date).startOf(type).toDate();
-            endDate = moment(date).endOf(type).toDate();
-        }
-        else return res.status(400).json({ isSuccess: false, mes: 'type sai' });
-        if (date === undefined) {
-            return res.status(400).json({ isSuccess: false });
-        }
-        if (date === '') {
-            return res.status(400).json({ isSuccess: false });
-        }
-
-
-
-
-        let { imports, totalAmountImport, exportsBH, exportsWithoutBH } = await getChangeIngredientShopInfo(staff.idShop, startDate, endDate, 1)
-
-        return res.status(200).json({ isSuccess: true, imports, totalAmountImport, exportsBH, exportsWithoutBH });
-    } catch (error) {
-        res.status(500).json({ error, mes: 'reportByDate' });
-    }
-};
 const getSixMonthInputAndOuput = async (req, res) => {
     try {
-        const staff = req.staff
+        //const staff = req.staff
+        const { idShop } = req.params
+        var currentDate = moment();
+
+        var dateRangeArray = [];
+
+        for (var i = 5; i >= 0; i--) {
+            var endDate = moment(currentDate).subtract(i, 'months').endOf('month').toDate();
+            var startDate = moment(endDate).startOf('month').toDate();
+            var month = moment(endDate).month();
+            var dateRange = {
+                month: month + 1,
+                startDate: startDate,
+                endDate: endDate
+            };
+            dateRangeArray.push(dateRange);
+        }
+        // Lặp qua mảng dateRangeArray
+        let listTotalAndTotalAmountImport = await getTotalAndTotalImport(dateRangeArray, idShop)
+
+        //console.log(dateRangeArray);
+
+
+        // let { imports, totalAmountImport, exportsBH, exportsWithoutBH } = await getChangeIngredientShopInfo(staff.idShop, startDate, endDate, 1)
+
+        return res.status(200).json({ isSuccess: true, listTotalAndTotalAmountImport });
+    } catch (error) {
+        res.status(500).json({ error, mes: 'reportByDate' });
+    }
+};
+const getSixMonthInputAndOuputAllShop = async (req, res) => {
+    try {
+        //const staff = req.staff
 
         var currentDate = moment();
 
@@ -460,7 +502,7 @@ const getSixMonthInputAndOuput = async (req, res) => {
             dateRangeArray.push(dateRange);
         }
         // Lặp qua mảng dateRangeArray
-        let listTotalAndTotalAmountImport = await getTotalAndTotalImport(dateRangeArray, staff.idShop)
+        let listTotalAndTotalAmountImport = await getTotalAndTotalImportAllShop(dateRangeArray)
 
         //console.log(dateRangeArray);
 
@@ -474,15 +516,15 @@ const getSixMonthInputAndOuput = async (req, res) => {
 };
 const getListManager = async (req, res) => {
     try {
-        
-        
+
+
         let listStaffs = await Account.findAll({
-            where: { role: 2 },
-            attributes: ['idAcc', 'phone'],
+            where: { [Op.or]: [{ role: 2 }, { role: 3 }] },
+            attributes: ['idAcc', 'phone', 'role'],
             include: [
                 {
                     model: Staff,
-                    attributes: ['idStaff','idShop','name'],
+                    attributes: ['idStaff', 'idShop', 'name'],
                     required: true,
                 }
             ],
@@ -497,7 +539,7 @@ const getListManager = async (req, res) => {
                 name: item['Staff.name'],
                 idShop: item['Staff.idShop'],
                 phone: item['phone'],
-
+                role: item['role'],
             }
         });
         return res.status(200).json({ isSuccess: true, listStaffs });
@@ -505,74 +547,220 @@ const getListManager = async (req, res) => {
         res.status(500).json({ error, mes: 'getListStaff' });
     }
 };
-const deleteStaff = async (req, res) => {
+const getListShop = async (req, res) => {
     try {
-        const staff = req.staff
-        const account = req.account
-        
-        if(account.role ===1){
-            let infoStaff = await Staff.findOne({
-                where:{idAcc:account.idAcc}
-            })
-            if(infoStaff.idShop!==staff.idShop) return res.status(403).json({ message: "Bạn không có quyền sử dụng chức năng này!" });
-            let isSuccess = await deleteStaffWithTransaction(account, infoStaff)
-            
-            return res.status(200).json({ isSuccess});
-        }
-        else return res.status(403).json({ message: "Bạn không có quyền sử dụng chức năng này!" });
-        
-    } catch (error) {
-        res.status(500).json({ error, mes: 'editStaff' });
-    }
-};
-const editStaff = async (req, res) => {
-    try {
-        const staff = req.staff
-        const account = req.account
-        const { phone, password, name } = req.body;
-        if (phone === '' || password === '' || name === '') {
-            return res.status(400).json({ isSuccess: false, mes: 'editStaff1' });
-        }
-        if (isNaN(phone) || password === undefined || name === undefined) {
-            return res.status(400).json({ isSuccess: false, mes: 'editStaff2' });
-        }
-        if(account.role ===1){
-            let infoStaff = await Staff.findOne({
-                where:{idAcc:account.idAcc}
-            })
-            if(infoStaff.idShop!==staff.idShop) return res.status(403).json({ message: "Bạn không có quyền sử dụng chức năng này!" });
-            infoStaff.phone = phone
-            infoStaff.password = password
-            infoStaff.name = name
-            await infoStaff.save()
-            return res.status(200).json({ isSuccess:true });
-        }
-        else return res.status(403).json({ message: "Bạn không có quyền sử dụng chức năng này!" });
-        
-    } catch (error) {
-        res.status(500).json({ error, mes: 'editStaff' });
-    }
-};
-
-const addStaff = async (req, res) => {
-    try {
-        const staff = req.staff
-        const { phone, password, name } = req.body;
-        if (phone === '' || password === '' || name === '') {
-            return res.status(400).json({ isSuccess: false, mes: 'addStaff1' });
-        }
-        if (isNaN(phone) || password === undefined || name === undefined) {
-            return res.status(400).json({ isSuccess: false, mes: 'addStaff2' });
-        }
-        let isSuccess = await createStaffWithTransaction(phone, password, name, staff.idShop, 1)
 
 
-        return res.status(200).json({ isSuccess });
+        let listShops = await Shop.findAll({
+
+            attributes: ['idShop', 'address', 'image', 'isActive'],
+
+            //raw: true,
+
+        })
+
+        // listStaffs = listStaffs.map(item => {
+
+        //      return {
+        //         idStaff: item['Staff.idStaff'],
+        //         name: item['Staff.name'],
+        //         idShop: item['Staff.idShop'],
+        //         phone: item['phone'],
+
+        //     }
+        // });
+        return res.status(200).json({ isSuccess: true, listShops });
     } catch (error) {
         res.status(500).json({ error, mes: 'getListStaff' });
     }
 };
+const deleteManager = async (req, res) => {
+    try {
+        const staff = req.staff
+        const account = req.account
+
+        if (account.role === 2) {
+            let infoStaff = await Staff.findOne({
+                where: { idAcc: account.idAcc }
+            })
+
+            let isSuccess = await deleteStaffWithTransaction(account, infoStaff)
+
+            return res.status(200).json({ isSuccess });
+        }
+        else return res.status(403).json({ message: "Bạn không có quyền sử dụng chức năng này!" });
+
+    } catch (error) {
+        res.status(500).json({ error, mes: 'editStaff' });
+    }
+};
+const editManager = async (req, res) => {
+    try {
+        const staff = req.staff
+        const { idStaff } = req.params
+        const { phone, name, password, idShop } = req.body;
+
+        let infoStaff = await Staff.findOne({
+            where: { idStaff: idStaff },
+
+        })
+        if (!infoStaff) return res.status(409).send({ isSuccess: false, mes: 'Nhân viên không tồn tại' })
+        let account = await Account.findOne({
+            where: { idAcc: infoStaff.idAcc }
+        })
+        if (!account) return res.status(409).send({ isSuccess: false, mes: 'Tài khoản không tồn tại' })
+        if (phone) {
+            account.phone = phone;
+        }
+        if (idShop) {
+            infoStaff.idShop = idShop
+        }
+        if (name) {
+            infoStaff.name = name;
+        }
+        if (password) {
+            const salt = bcrypt.genSaltSync(10);
+            const hashPassword = bcrypt.hashSync(password, salt);
+            account.password = hashPassword
+        }
+        await account.save()
+        await infoStaff.save()
+        return res.status(200).json({ isSuccess: true });
+
+
+    } catch (error) {
+        res.status(500).json({ error, mes: 'editManager' });
+    }
+};;
+const editShop = async (req, res) => {
+    try {
+        const staff = req.staff
+        const { idShop } = req.params
+        const { address, image, latitude, longitude, isActive } = req.body;
+
+        let infoShop = await Shop.findOne({
+            where: { idShop: idShop },
+
+        })
+        //console.log(1)
+        if (!infoShop) return res.status(409).send({ isSuccess: false, mes: 'Shop không tồn tại' });;
+        if (image) {
+            infoShop.image = image;
+        }
+        if (isActive) {
+            if (Number(isActive) != 1) {
+                infoShop.isActive = 0;
+            }
+            else {
+                infoShop.isActive = 1
+            }
+        }
+        if (latitude && longitude && address) {
+            if (isNaN(latitude) || isNaN(longitude)) return res.status(400).json({ isSuccess: false, mes: 'Một trong hai lati hoặc longi không phải số' });
+            infoShop.latitude = Number(latitude)
+            infoShop.longitude = Number(longitude)
+            infoShop.address = address;
+        }
+
+        await infoShop.save()
+        return res.status(200).json({ isSuccess: true });
+
+
+    } catch (error) {
+        res.status(500).json({ error, mes: 'editShop' });
+    }
+};
+
+const addManager = async (req, res) => {
+    try {
+        const staff = req.staff
+        const { phone, password, name, idShop } = req.body;
+        if (phone === '' || password === '' || name === '' || idShop === '') {
+            return res.status(400).json({ isSuccess: false, mes: 'addManager1' });
+        }
+        if (isNaN(phone) || isNaN(idShop) || password === undefined || name === undefined) {
+            return res.status(400).json({ isSuccess: false, mes: 'addManager2' });
+        }
+        let isSuccess = await createManagerWithTransaction(phone, password, name, idShop)
+
+
+        return res.status(200).json({ isSuccess });
+    } catch (error) {
+        res.status(500).json({ error, mes: 'addManager' });
+    }
+};
+const addShop = async (req, res) => {
+    try {
+
+        let { address, image, latitude, longitude, isActive } = req.body;
+        latitude = latitude.replace(/\s/g, '');
+        longitude = longitude.replace(/\s/g, '');
+        address = address.replace(/\s/g, '');
+        image = image.replace(/\s/g, '');
+        longitude = longitude.replace(/\s/g, '');
+        if (latitude === '' || longitude === '' || address === '' || image === '' || isActive === '') {
+            return res.status(400).json({ isSuccess: false, mes: 'addShop1' });
+        }
+        if (isNaN(latitude) || isNaN(longitude) || isNaN(isActive) || address === undefined || image === undefined) {
+            return res.status(400).json({ isSuccess: false, mes: 'addShop2' });
+        }
+        if (Number(isActive) == 1) {
+            isActive = 1
+        }
+        else {
+            isActive = 0
+        }
+
+        const newShop = await Shop.create({
+            address,
+            longitude,
+            latitude,
+            isActive,
+            image,
+
+        });
+
+
+        return res.status(200).json({ isSuccess: true, newShop });
+    } catch (error) {
+        res.status(500).json({ error, mes: 'addShop' });
+    }
+};
+const getListIngredient = async (req, res) => {
+    try {
+        const listIngredient = await Ingredient.findAll({
+
+        })
+
+        return res.status(200).json({ isSuccess: true, listIngredient });
+    } catch (error) {
+        res.status(500).json({ error, mes: 'getListIngredient' });
+    }
+};
+const addIngredient = async (req, res) => {
+    try {
+        const { image, unitName, name } = req.body;
+        if (image === '' || unitName === '' || name === '') {
+            return res.status(400).json({ isSuccess: false, mes: 'addIngredient1' });
+        }
+        if (image === undefined || unitName === undefined || name === undefined) {
+            return res.status(400).json({ isSuccess: false, mes: 'addIngredient2' });
+        }
+        const newIngredient = await Ingredient.create({
+            name,
+            image,
+            unitName,
+           
+        });
+
+        return res.status(200).json({ isSuccess: true });
+    } catch (error) {
+        res.status(500).json({ error, mes: 'addIngredient' });
+    }
+};
 module.exports = {
-    // getDetailTaiKhoan,
-    getReportByDateAdmin, getListManager, getDetailChangeIngredientShop, addStaff, editStaff, deleteStaff, getSixMonthInputAndOuput
+
+    getListManager, addManager, editManager, deleteManager, getSixMonthInputAndOuput,
+    getListShop, editShop, addShop, getSixMonthInputAndOuputAllShop, getListIngredient,
+    addIngredient
 };

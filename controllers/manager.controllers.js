@@ -8,16 +8,16 @@ const { getDetailCart } = require("./order.controllers")
 const deleteStaffWithTransaction = async (account, staff) => {
     //console.log('test1')
     const t = await db.sequelize.transaction(); // Bắt đầu transaction
-    
+
     let isSuccess
     try {
         //console.log('test2')
-        
+
         await staff.destroy({ transaction: t });
         await account.destroy({ transaction: t });
-       
 
-     
+
+
 
 
         await t.commit(); // Lưu thay đổi và kết thúc transaction
@@ -25,7 +25,7 @@ const deleteStaffWithTransaction = async (account, staff) => {
     } catch (error) {
         isSuccess = false
         await t.rollback(); // Hoàn tác các thay đổi và hủy bỏ transaction
-        
+
     }
 
     return isSuccess
@@ -34,7 +34,7 @@ const deleteStaffWithTransaction = async (account, staff) => {
 const createStaffWithTransaction = async (phone, password, name, idShop, role) => {
     //console.log('test1')
     const t = await db.sequelize.transaction(); // Bắt đầu transaction
-    
+
     let isSuccess
     try {
         //console.log('test2')
@@ -65,7 +65,7 @@ const createStaffWithTransaction = async (phone, password, name, idShop, role) =
     } catch (error) {
         isSuccess = false
         await t.rollback(); // Hoàn tác các thay đổi và hủy bỏ transaction
-        
+
     }
 
     return isSuccess
@@ -476,7 +476,7 @@ const getSixMonthInputAndOuput = async (req, res) => {
 const getListStaff = async (req, res) => {
     try {
         const staff = req.staff
- 
+
 
         let listStaffs = await Staff.findAll({
             where: { idShop: staff.idShop },
@@ -510,18 +510,18 @@ const deleteStaff = async (req, res) => {
     try {
         const staff = req.staff
         const account = req.account
-        
-        if(account.role ===1){
+
+        if (account.role === 1) {
             let infoStaff = await Staff.findOne({
-                where:{idAcc:account.idAcc}
+                where: { idAcc: account.idAcc }
             })
-            if(infoStaff.idShop!==staff.idShop) return res.status(403).json({ message: "Bạn không có quyền sử dụng chức năng này!" });
+            if (infoStaff.idShop !== staff.idShop) return res.status(403).json({ message: "Bạn không có quyền sử dụng chức năng này!" });
             let isSuccess = await deleteStaffWithTransaction(account, infoStaff)
-            
-            return res.status(200).json({ isSuccess});
+
+            return res.status(200).json({ isSuccess });
         }
         else return res.status(403).json({ message: "Bạn không có quyền sử dụng chức năng này!" });
-        
+
     } catch (error) {
         res.status(500).json({ error, mes: 'editStaff' });
     }
@@ -529,27 +529,40 @@ const deleteStaff = async (req, res) => {
 const editStaff = async (req, res) => {
     try {
         const staff = req.staff
-        const account = req.account
-        const { phone, password, name } = req.body;
-        if (phone === '' || password === '' || name === '') {
-            return res.status(400).json({ isSuccess: false, mes: 'editStaff1' });
+        const { idStaff } = req.params
+        const { phone, name, password } = req.body;
+        console.log(2)
+        console.log(idStaff)
+        let infoStaff = await Staff.findOne({
+            where: { idStaff: idStaff, idShop: staff.idShop },
+
+        })
+        console.log(1)
+        if (!infoStaff) return res.status(409).send({ isSuccess: false, mes: 'Nhân viên không tồn tại' })
+        let account = await Account.findOne({
+            where: { idAcc: infoStaff.idAcc }
+        })
+        if (!account) return res.status(409).send({ isSuccess: false, mes: 'Tài khoản không tồn tại' })
+
+
+        if (infoStaff.idShop !== staff.idShop) return res.status(403).json({ message: "Bạn không có quyền sử dụng chức năng này!" });
+        if (phone) {
+            account.phone = phone;
         }
-        if (isNaN(phone) || password === undefined || name === undefined) {
-            return res.status(400).json({ isSuccess: false, mes: 'editStaff2' });
+
+        if (name) {
+            infoStaff.name = name;
         }
-        if(account.role ===1){
-            let infoStaff = await Staff.findOne({
-                where:{idAcc:account.idAcc}
-            })
-            if(infoStaff.idShop!==staff.idShop) return res.status(403).json({ message: "Bạn không có quyền sử dụng chức năng này!" });
-            infoStaff.phone = phone
-            infoStaff.password = password
-            infoStaff.name = name
-            await infoStaff.save()
-            return res.status(200).json({ isSuccess:true });
+        if (password) {
+            const salt = bcrypt.genSaltSync(10);
+            const hashPassword = bcrypt.hashSync(password, salt);
+            account.password = hashPassword
         }
-        else return res.status(403).json({ message: "Bạn không có quyền sử dụng chức năng này!" });
-        
+        await account.save()
+        await infoStaff.save()
+        return res.status(200).json({ isSuccess: true });
+
+
     } catch (error) {
         res.status(500).json({ error, mes: 'editStaff' });
     }

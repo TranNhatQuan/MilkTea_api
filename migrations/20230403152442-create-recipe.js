@@ -33,7 +33,11 @@ module.exports = {
       image: {
         type: Sequelize.TEXT,
         allowNull: false,
-      }
+      },
+      isDel: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+      },
     });
   },
   async down(queryInterface, Sequelize) {

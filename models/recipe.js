@@ -55,7 +55,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    
+    isDel: {
+      allowNull: false,
+      type: DataTypes.INTEGER,
+      defaultValue: 0, // Giá trị mặc định là 1
+    },
     
   }, {
     sequelize,

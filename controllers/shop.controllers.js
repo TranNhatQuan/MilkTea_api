@@ -96,7 +96,7 @@ const menuByTypeForStaff = async (req, res) => {
                 attributes: ['discount', 'isActive'],
                 include: [{
                     model: Recipe,
-                    where: { idType: { [Op.in]: listType } },
+                    where: { idType: { [Op.in]: listType }, isDel:0 },
                 }
                 ]
             })
@@ -110,7 +110,7 @@ const menuByTypeForStaff = async (req, res) => {
                 attributes: ['discount', 'isActive'],
                 include: [{
                     model: Recipe,
-
+                    where:{isDel:0}
                 }
                 ]
             })
@@ -173,8 +173,17 @@ const editRecipeShop = async (req, res) => {
             recipe = await Recipe_shop.findOne({
                 where: {
                     idRecipe
+
                 },
+                include:[
+                    {
+                        model:Recipe,
+                        where:{isDel:0},
+                        required:true
+                    }
+                ]
             })
+            if(!recipe) return res.status(404).send({ isSuccess: false, mes: 'Recipe không tồn tại' });;
             recipe.isActive = isActive
             recipe.discount = discount
             await recipe.save()
@@ -204,7 +213,7 @@ const menuByTypeForUser = async (req, res) => {
                 attributes: ['discount'],
                 include: [{
                     model: Recipe,
-                    where: { idType: { [Op.in]: listType } },
+                    where: { idType: { [Op.in]: listType },isDel:0 },
                 }
                 ]
             })
@@ -218,7 +227,7 @@ const menuByTypeForUser = async (req, res) => {
                 attributes: ['discount'],
                 include: [{
                     model: Recipe,
-
+                    where: {isDel:0}
                 }
                 ]
             })
@@ -262,7 +271,7 @@ const getListIngredientShop = async (req, res) => {
             where: { idShop: staff.idShop },
             include: [{
                 model: Ingredient,
-
+                where:{isDel:0}
             }],
             raw: true,
         })

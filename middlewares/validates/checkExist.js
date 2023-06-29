@@ -1,4 +1,4 @@
-const {Account, Product, Cart, Cart_product, Invoice,Ingredient_shop, Ingredient } = require("../../models");
+const {Account, Product, Cart, Cart_product, Invoice,Ingredient_shop,Shop, Ingredient } = require("../../models");
 const { QueryTypes, Op, where, STRING } = require("sequelize");
 const createProduct = async (idProduct) => {
   let productList = idProduct.substring(1)
@@ -69,7 +69,7 @@ const checkExistAccount = () => {
       
       //console.log(created)
       if (!account) {
-        return res.status(409).send({ isSuccess: false, mes: 'Tài khoản không tồn tại' });;
+        return res.status(404).send({ isSuccess: false, mes: 'Tài khoản không tồn tại' });;
       }
       else {
         req.account= account
@@ -294,14 +294,21 @@ const checkExistIngredientShop = () => {
           idShop: staff.idShop,
         }
       });
+      let existIngrediet = await Ingredient.findOne({
+        where:{
+          idIngredient,
+          isDel:0
+        }
+      })
       //console.log(created)
+      if(!existIngrediet)  return res.status(404).send({ isSuccess: false, created, mes: 'Không tồn tại ingredient' });
       if (ingredient != null) {
         req.ingredient = ingredient
         next();
       }
       else {
 
-        return res.status(500).send({ isSuccess: false, created, mes: 'có lỗi trong quá trình tạo ingredientShop' });;
+        return res.status(500).send({ isSuccess: false, created, mes: 'có lỗi trong quá trình tạo ingredientShop' });
       }
 
 
@@ -346,8 +353,45 @@ const checkNotExistAcount = () => {
   }
 
 };
+const checkNotExistShopWithLatitudeAndLongitude = () => {
+  return async (req, res, next) => {
+    try {
+      //console.log(1)
+      //const staff = req.staff
+      let {latitude, longitude } = req.body;
+        latitude = latitude.replace(/\s/g, '');
+        longitude = longitude.replace(/\s/g, '');
+      
+        if (latitude === '' || longitude === '' ) {
+            return res.status(400).json({ isSuccess: false, mes: 'checkNotExistShop1' });
+        }
+        if (isNaN(latitude) || isNaN(longitude)) {
+            return res.status(400).json({ isSuccess: false, mes: 'checkNotExistShop2' });
+        }
+      
+      const shop = await Shop.findOne({
+        where: {
+          latitude,
+          longitude
+        },
+      });
+      
+      //console.log(created)
+      if (shop) {
+        return res.status(409).send({ isSuccess: false, mes: 'Shop đã tồn tại' });;
+      }
+      else {
+        next();
+      }
+    } catch (error) {
+      return res.status(500).send({ isSuccess: false, mes: 'Có lỗi trong quá trình thêm Shop' });;
+    }
+  }
+
+};
 module.exports = {
 
   checkExistAccount, checkExistProduct, checkExistCurrentCart, checkExistProductCartAndDel,
-  checkExistInvoiceLessThan3, checkExistInvoiceStatus, checkExistIngredientShop, checkNotExistAcount
+  checkExistInvoiceLessThan3, checkExistInvoiceStatus, checkExistIngredientShop, checkNotExistAcount,
+  checkNotExistShopWithLatitudeAndLongitude
 };

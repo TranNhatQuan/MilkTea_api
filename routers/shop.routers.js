@@ -15,7 +15,7 @@ shopRouter.get("/searchInShop", searchRecipe);
 shopRouter.get("/info", authenticate, authorize(1), getInfoShop);
 shopRouter.get("/listIngredientShop", authenticate, authorize(1), getListIngredientShop);
 shopRouter.put("/import/:idIngredient", authenticate, authorize(2), checkExistIngredientShop(), importIngredient);
-shopRouter.put("/export/:idIngredient", authenticate, authorize(2),checkExistIngredientShop(), exportIngredient);
+shopRouter.put("/export/:idIngredient", authenticate, authorize(2), checkExistIngredientShop(), exportIngredient);
 shopRouter.put("/editInfo", authenticate, authorize(2), editInfoShop);
 shopRouter.put("/editRecipeShop/:idRecipe", authenticate, authorize(2), editRecipeShop);
 shopRouter.get("/typeForStaff", authenticate, authorize(1), menuByTypeForStaff);

@@ -9,7 +9,7 @@ const managerRouter = express.Router();
 
 managerRouter.get("/reportByDate/:date", authenticate, authorize(2), getReportByDate);
 managerRouter.post("/addStaff", authenticate, authorize(2), checkNotExistAcount(), addStaff)
-managerRouter.put("/editStaff", authenticate, authorize(2), checkExistAccount(), editStaff)
+managerRouter.patch("/editStaff/:idStaff", authenticate, authorize(2), editStaff)
 managerRouter.delete("/deleteStaff", authenticate, authorize(2), checkExistAccount(), deleteStaff)
 managerRouter.get("/detailChangeIngredientShop/:date", authenticate, authorize(2), getDetailChangeIngredientShop);
 managerRouter.get("/getDataForChart", authenticate, authorize(2), getSixMonthInputAndOuput)

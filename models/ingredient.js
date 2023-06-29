@@ -45,7 +45,12 @@ module.exports = (sequelize, DataTypes) => {
     unitName: {
       allowNull: false,
       type: DataTypes.STRING(10),
-    }
+    },
+    isDel: {
+      allowNull: false,
+      type: DataTypes.INTEGER,
+      defaultValue: 0, // Giá trị mặc định là 1
+    },
   }, {
     sequelize,
     modelName: 'Ingredient',

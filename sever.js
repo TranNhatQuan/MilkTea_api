@@ -27,35 +27,63 @@ const {Invoice, Cart } = require("./models");
 const { QueryTypes, Op, where, STRING } = require("sequelize");
 
 const job = new cron.CronJob('0 */30 * * * *', async () => {
-  // Mã thực hiện xoá các invoice không được thanh toán trong 1 ngày
+  // Mã thực hiện xoá các invoice không được thanh toán mỗi 30 phút
   await deleteUnpaidInvoices();
 });
-
-// const job = new cron.CronJob('*/10 * * * * *', async () => {
-//   // Mã thực hiện xoá các invoice không được thanh toán trong 1 ngày
+// const job = new cron.CronJob('*/30 * * * * *', async () => {
+//   // Mã thực hiện xoá các invoice không được thanh toán mỗi 30 giây
 //   await deleteUnpaidInvoices();
 // });
-// Hàm thực hiện xoá các invoice không được thanh toán trong 1 ngày
+
 async function deleteUnpaidInvoices() {
+  try {
     let invoices = await Invoice.findAll({
-        where: {
-          status: 0,
-          date: {
-            [Op.lt]: moment().subtract(30, 'minutes')
-          }
-        },
-        raw: true
+      where: {
+        status: 0,
+        date: {
+          [Op.lt]: moment().subtract(30, 'minutes')
+        }
+      },
+      raw: true
+    });
+
+    for (let invoice of invoices) {
+      let cart = await Cart.findOne({
+        where: { idCart: invoice.idCart }
+      });
+      let currentCart = await Cart.findOne({
+        where:{ 
+          idUser: cart.idUser,
+          isCurrent: 1
+        }
       })
-      for (const invoice of invoices) {
-        let cart = await Cart.findOne({
-          where:{idCart: invoice.idCart},
-        })
-        cart.isCurrent = 1
-        await cart.save()
-        await invoice.destroy();
-        
+      
+      if (!cart) {
+        throw new Error('Cart not found for invoice');
       }
+      if(!currentCart){
+        cart.isCurrent = 1;
+        await cart.save();
+      }
+      
+
+      if (!invoice) {
+        throw new Error('Invoice not found');
+      }
+      //console.log(invoice)
+      await Invoice.destroy({
+        where: {
+          idInvoice: invoice.idInvoice // Sử dụng trường id hoặc trường khác để xác định hóa đơn cần xóa
+        }
+      });
+    }
+
+    console.log('Unpaid invoices deleted successfully.');
+  } catch (error) {
+    console.error('Error deleting unpaid invoices:', error);
+  }
 }
+
 
 // Bắt đầu công việc cron
 job.start();

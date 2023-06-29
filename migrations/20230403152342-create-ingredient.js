@@ -22,6 +22,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.TEXT,
       },
+      isDel: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+      },
     });
   },
   async down(queryInterface, Sequelize) {
