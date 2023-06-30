@@ -3,13 +3,14 @@ const { Shop, Recipe_shop, Recipe, Recipe_type, Cart, Cart_product, Product, Shi
 const { QueryTypes, Op, where, STRING } = require("sequelize");
 const { getIngredientByIdRecipe } = require("./shop.controllers")
 const moment = require('moment-timezone'); // require
-const changeIngredientByIdRecipe = async (idRecipe, quantity, idShop) => {
+const changeIngredientByIdRecipe = async (idRecipe, quantity, idShop, type) => {
     let infoChange
     let ingredients = getIngredientByIdRecipe(idRecipe, idShop)
     return infoChange
 }
-const changeIngredientByInvoice = async (invoice, type) => {
+const changeIngredientByInvoice = async (invoice, idShop, type) => {
     let infoChange
+    //let quantity = 0
     let cart = await Cart.findAll({
         where: {
             idCart: invoice.idCart
@@ -21,14 +22,25 @@ const changeIngredientByInvoice = async (invoice, type) => {
                 include: [
                     {
                         model: Product,
+                        include: [
+                            {
+                                model: Recipe,
 
+                            }
+                        ]
                     }
                 ]
             }
         ],
     })
-    infoChange = cart
-    return infoChange
+    cart.forEach(async (item) => {
+        //quantity += Number(item['Cart_products.Product.quantity'])
+        let idRecipe =  Number(item['Cart_products.Product.Recipe.idRecipe'])
+        let quantity = Number(item['Cart_products.Product.quantity']) * Number(item['Cart_products.quantity'])
+        let info = await changeIngredientByIdRecipe(idRecipe, quantity, idShop, type)
+    });
+    // infoChange = quantity
+    return cart
 }
 const getToppingOfProductOfInvoice = async (idProduct) => {
 
@@ -363,6 +375,7 @@ const getToppingOptions = async (req, res) => {
                 {
                     model: Recipe,
                     attributes: ['name', 'price', 'image'],
+                    where: { isDel: 0 },
                     required: true,
                     include: [
                         {
@@ -724,7 +737,7 @@ const createInvoice = async (req, res) => {
 
         const idInvoice = invoice.idInvoice
         currentCart.isCurrent = 0
-        let infoChange = await changeIngredientByInvoice(invoice, 1)
+        //let infoChange = await changeIngredientByInvoice(invoice, 1)
         await currentCart.save()
 
 
@@ -734,7 +747,48 @@ const createInvoice = async (req, res) => {
         res.status(500).json({ error: 'Đã xảy ra lỗi' });
     }
 };
+const testInvoice = async (req, res) => {
+    try {
+        const { idShipping_company, shippingFee, idShop } = req.body;
+        if (idShipping_company === undefined || shippingFee === undefined || idShop === undefined) {
+            return res.status(400).json({ isSuccess: false });
+        }
+        if (idShipping_company === '' || shippingFee === '' || idShop === '') {
+            return res.status(400).json({ isSuccess: false });
+        }
+        //console.log(idShipping_company)
+        const user = req.user
+        const currentCart = req.currentCart
+        let { cart, total, mess, listIdProduct } = await getCurrentCartAndTotal(user, idShop)
 
+        //console.log(listIdProduct)
+        if (listIdProduct != '') {
+            return res.status(400).json({ isSuccess: false });
+        }
+        // console.log('test1')
+        let invoice = await Invoice.create({
+            idCart: currentCart.idCart,
+            idShop,
+            idShipping_company,
+            shippingFee,
+            total,
+            date: moment().format("YYYY-MM-DD HH:mm:ss"),
+            status: 0,
+        })
+
+
+        const idInvoice = invoice.idInvoice
+        currentCart.isCurrent = 0
+        let infoChange = await changeIngredientByInvoice(invoice, idShop, 1)
+        //await currentCart.save()
+        await invoice.destroy()
+
+        //console.log(listTopping)
+        return res.status(200).json({ isSuccess: true, idInvoice, cart, infoChange });
+    } catch (error) {
+        res.status(500).json({ error: 'Đã xảy ra lỗi' });
+    }
+};
 const getAllOrderInTransit = async (req, res) => {
     try {
         const staff = req.staff
@@ -859,7 +913,7 @@ const getAllOrder = async (req, res) => {
         });
 
         invoices = await Promise.all(promises);
-      
+
 
 
         return res.status(200).json({ isSuccess: true, invoices });
@@ -871,19 +925,19 @@ const searchRecipe = async (req, res) => {
 
 
     try {
-      
+
         if (req.query.idShop === '' || req.query.name === '' || req.query.limit === '') {
             return res.status(400).json({ isSuccess: false, mes: 'searchRecipe1' });
         }
-       
+
         if (isNaN(req.query.limit) || req.query.name === undefined || isNaN(req.query.idShop)) {
             return res.status(400).json({ isSuccess: false, mes: 'searchRecipe2' });
         }
-     
+
         const name = req.query.name
         const limit = Number(req.query.limit);
         const idShop = Number(req.query.idShop);
-       
+
         let recipes = await Recipe.findAll({
             where: {
                 name: { [Op.like]: `%${name}%` }
@@ -900,7 +954,7 @@ const searchRecipe = async (req, res) => {
                 },
             ]
         });
-      
+
         recipes = recipes.map(item => {
             return {
                 idRecipe: item['idRecipe'],
@@ -926,6 +980,6 @@ module.exports = {
     // getDetailTaiKhoan,
     getToppingOptions, editCart, addToCart, getCurrentCart, getShipFee, getListCompanies, createInvoice, confirmDeleteProductCart,
     confirmInvoice, getCurrentInvoice, getAllInvoiceUser, getDetailInvoice, cancelInvoice, getAllOrder, changeStatusInvoice,
-    getAllOrderInTransit, getAllInvoiceByDate, getDetailCart, searchRecipe
+    getAllOrderInTransit, getAllInvoiceByDate, getDetailCart, searchRecipe, testInvoice
 
 };

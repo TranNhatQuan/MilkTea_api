@@ -1,9 +1,10 @@
-const { Shop, Ingredient, Recipe_shop, Recipe, Invoice, Staff, Account, Import, Export, Ingredient_shop, Revenue_statistic } = require("../models");
+const { Shop, Ingredient, Type, Recipe_shop, Recipe, Recipe_type, Recipe_ingredient, Invoice, Staff, Account, Import, Export, Ingredient_shop, Revenue_statistic } = require("../models");
 const { QueryTypes, Op, where, STRING, NUMBER } = require("sequelize");
 const db = require("../models/index");
 const bcrypt = require("bcryptjs");
 const moment = require('moment-timezone'); // require
-const { getDetailCart } = require("./order.controllers")
+const { getDetailCart } = require("./order.controllers");
+const { raw } = require("body-parser");
 
 const deleteStaffWithTransaction = async (account, staff) => {
     //console.log('test1')
@@ -477,7 +478,7 @@ const getSixMonthInputAndOuput = async (req, res) => {
 
         // let { imports, totalAmountImport, exportsBH, exportsWithoutBH } = await getChangeIngredientShopInfo(staff.idShop, startDate, endDate, 1)
 
-        return res.status(200).json({ isSuccess: true, listTotalAndTotalAmountImport });
+        return res.status(200).json({ isSuccess: true, listTotalAndTotalAmountImport, idShop });
     } catch (error) {
         res.status(500).json({ error, mes: 'reportByDate' });
     }
@@ -553,7 +554,7 @@ const getListShop = async (req, res) => {
 
         let listShops = await Shop.findAll({
 
-            attributes: ['idShop', 'address', 'image', 'isActive'],
+            attributes: ['idShop', 'address', 'image', 'isActive', 'latitude', 'longitude'],
 
             //raw: true,
 
@@ -594,6 +595,38 @@ const deleteManager = async (req, res) => {
         res.status(500).json({ error, mes: 'editStaff' });
     }
 };
+const editIngredient = async (req, res) => {
+    try {
+        let ingredient = req.ingredient
+        const { name, unitName, image, isDel } = req.body;
+
+
+
+        if (name) {
+            ingredient.name = name;
+        }
+        if (unitName) {
+            ingredient.unitName = unitName
+        }
+        if (image) {
+            ingredient.image = image;
+        }
+        if (isDel) {
+            if (Number(isDel) == 1) {
+                ingredient.isDel = 1
+            }
+            else {
+                ingredient.isDel = 0
+            }
+        }
+        await ingredient.save()
+        return res.status(200).json({ isSuccess: true });
+
+
+    } catch (error) {
+        res.status(500).json({ error, mes: 'editManager' });
+    }
+};
 const editManager = async (req, res) => {
     try {
         const staff = req.staff
@@ -631,7 +664,7 @@ const editManager = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error, mes: 'editManager' });
     }
-};;
+};
 const editShop = async (req, res) => {
     try {
         const staff = req.staff
@@ -693,11 +726,7 @@ const addShop = async (req, res) => {
     try {
 
         let { address, image, latitude, longitude, isActive } = req.body;
-        latitude = latitude.replace(/\s/g, '');
-        longitude = longitude.replace(/\s/g, '');
-        address = address.replace(/\s/g, '');
-        image = image.replace(/\s/g, '');
-        longitude = longitude.replace(/\s/g, '');
+
         if (latitude === '' || longitude === '' || address === '' || image === '' || isActive === '') {
             return res.status(400).json({ isSuccess: false, mes: 'addShop1' });
         }
@@ -750,7 +779,7 @@ const addIngredient = async (req, res) => {
             name,
             image,
             unitName,
-           
+
         });
 
         return res.status(200).json({ isSuccess: true });
@@ -758,9 +787,295 @@ const addIngredient = async (req, res) => {
         res.status(500).json({ error, mes: 'addIngredient' });
     }
 };
+const addRecipe = async (req, res) => {
+    try {
+        const { image, info, name, price, idType } = req.body;
+
+        const newRecipe = await Recipe.create({
+            name,
+            image,
+            info,
+            price,
+            idType,
+
+        });
+
+        return res.status(200).json({ isSuccess: true });
+    } catch (error) {
+        res.status(500).json({ error, mes: 'addIngredient' });
+    }
+};
+const editRecipe = async (req, res) => {
+    try {
+
+        const { image, info, name, price, idType, isDel } = req.body;
+        const { idRecipe } = req.params
+        let infoRecipe = await Recipe.findOne({
+            where: { idRecipe: idRecipe },
+
+        })
+
+
+        if (name) {
+            infoRecipe.name = name;
+        }
+        if (image) {
+            infoRecipe.image = image;
+        }
+        if (info) {
+            infoRecipe.info = info;
+        }
+        if (idType) {
+            const type = await Type.findOne({
+                where: {
+                    idType: idType
+                }
+            })
+            if (!type) return res.status(400).json({ isSuccess: false, mes: 'Không tồn tại idType này' });
+            infoRecipe.idType = idType
+
+        }
+        if (price) {
+            infoRecipe.price = price;
+        }
+        if (isDel) {
+            if (Number(isDel) == 1) {
+                infoRecipe.isDel = 1
+            }
+            else {
+                infoRecipe.isDel = 0
+            }
+        }
+        await infoRecipe.save()
+        return res.status(200).json({ isSuccess: true });
+
+
+    } catch (error) {
+        res.status(500).json({ error, mes: 'editManager' });
+    }
+};
+const editRecipeIngredient = async (req, res) => {
+    try {
+
+        const { quantity } = req.body;
+
+        const recipe = req.recipe
+        const ingredient = req.ingredient
+        let [recipe_ingredient, created] = await Recipe_ingredient.findOrCreate({
+            where: {
+                idRecipe: recipe.idRecipe,
+                idIngredient: ingredient.idIngredient
+            }
+        });
+        if (isNaN(quantity)) return res.status(400).json({ isSuccess: false, mes: 'quantity phải là số và lớn hơn bằng 0' });
+        if (Number(quantity) < 0) return res.status(400).json({ isSuccess: false, mes: 'quantity phải là số và lớn hơn bằng 0' });
+        if (Number(quantity) == 0) {
+            await recipe_ingredient.destroy()
+            return res.status(200).json({ isSuccess: true });
+        }
+        recipe_ingredient.quantity = quantity
+        await recipe_ingredient.save()
+        return res.status(200).json({ isSuccess: true });
+
+
+    } catch (error) {
+        res.status(500).json({ error, mes: 'editManager' });
+    }
+};
+const addRecipeType = async (req, res) => {
+    try {
+
+
+
+        const recipe = req.recipe
+        const type = req.type
+        
+        let recipe_type = await Recipe_type.findOrCreate({
+            where:{
+                idRecipe: recipe.idRecipe,
+                idType: type.idType
+            }
+          
+        });
+        if(!recipe_type) return res.status(400).json({ isSuccess: true });
+        return res.status(200).json({ isSuccess: true });
+
+
+    } catch (error) {
+        res.status(500).json({ error, mes: 'addRecipeType' });
+    }
+};
+const deleteRecipeType = async (req, res) => {
+    try {
+
+
+
+        const recipe = req.recipe
+        const type = req.type
+        
+        let recipe_type = await Recipe_type.findOne({
+            where:{
+                idRecipe: recipe.idRecipe,
+                idType: type.idType
+            }
+          
+        });
+        if(!recipe_type) return res.status(404).json({ isSuccess: true, mes:'Không tồn tại liên kết recipe_type này' });
+        await recipe_type.destroy()
+        return res.status(200).json({ isSuccess: true });
+
+
+    } catch (error) {
+        res.status(500).json({ error, mes: 'addRecipeType' });
+    }
+};
+const getListRecipeAdmin = async (req, res) => {
+    try {
+
+
+        let listType = []
+        let listRecipes
+
+        if (req.query.idType !== '') {
+
+            listType = req.query.idType.split(',').map(Number);
+            listRecipes = await Recipe.findAll({
+                where: {
+                    idType: { [Op.in]: listType }
+                },
+
+            })
+        }
+        else {
+
+            listRecipes = await Recipe.findAll({
+
+
+            })
+        }
+        return res.status(200).json({ isSuccess: true, listRecipes });
+    } catch (error) {
+        res.status(500).json({ error, mes: 'getListRecipeAdmin' });
+    }
+};
+const getListType = async (req, res) => {
+    try {
+
+        let listType = await Type.findAll({
+            include: {
+                model: Recipe_type,
+                include: [
+                    {
+                        model: Recipe,
+                        attributes: ['name', 'info', 'price', 'image'],
+                        where: { isDel: 0 }
+
+                    }
+                ]
+            },
+            //raw:true,
+        })
+        listType.forEach((type) => {
+            type.Recipe_types.forEach((recipe) => {
+                recipe.dataValues.name = recipe.Recipe.dataValues.name
+                recipe.dataValues.info = recipe.Recipe.dataValues.info
+                recipe.dataValues.price = recipe.Recipe.dataValues.price
+                recipe.dataValues.image = recipe.Recipe.dataValues.image
+                delete recipe.dataValues.idType
+                delete recipe.dataValues.Recipe
+            });
+            type.dataValues.listToppings = type.dataValues.Recipe_types
+            delete type.dataValues.Recipe_types
+        });
+        return res.status(200).json({ isSuccess: true, listType });
+    } catch (error) {
+        res.status(500).json({ error, mes: 'getListRecipeAdmin' });
+    }
+};
+const getIngredientByIdRecipeAdmin = async (idRecipe) => {
+
+    let ingredients = await Recipe_ingredient.findAll({
+        where: { idRecipe },
+        include: [{
+            model: Ingredient,
+
+        }],
+        raw: true,
+    })
+    ingredients = ingredients.map(item => {
+
+        return {
+            idIngredient: item['idIngredient'],
+            name: item['Ingredient.name'],
+            image: item['Ingredient.image'],
+            quantity: item['quantity'],
+            unitName: item['Ingredient.unitName'],
+        }
+    });
+    return ingredients
+}
+const detailRecipeAdmin = async (req, res) => {
+    try {
+
+        //const staff = req.staff
+        const { idRecipe } = req.params
+        //console.log(staff.idShop)
+
+        if (idRecipe === '' || isNaN(idRecipe)) {
+            return res.status(400).json({ isSuccess: false, mes: 'detailRecipeAdmin1' });
+        }
+
+        let detailRecipe = await Recipe.findOne({
+            where: { idRecipe },
+
+            raw: true,
+        })
+
+        let ingredients = await getIngredientByIdRecipeAdmin(idRecipe)
+        console.log(1)
+        let listTopping = await Recipe_type.findAll({
+            where: { idType: detailRecipe.idType },
+            //attributes: [['name', 'Recipe.name']],
+            attributes: [
+                'idRecipe',
+            ],
+            required: true,
+            include: [
+                {
+                    model: Recipe,
+                    attributes: ['name', 'price', 'image'],
+                    required: true,
+
+                }
+            ],
+            raw: true
+        })
+        console.log(2)
+        listTopping = listTopping.map(item => {
+            return {
+
+                idRecipe: item['idRecipe'],
+                name: item['Recipe.name'],
+
+                price: item['Recipe.price'],
+                image: item['Recipe.image']
+            };
+        });
+        //console.log(listTopping)
+        console.log(3)
+        detailRecipe.ingredients = ingredients
+        detailRecipe.listTopping = listTopping
+
+
+        return res.status(200).json({ isSuccess: true, detailRecipe });
+    } catch (error) {
+        res.status(500).json({ error: 'Đã xảy ra  lỗi getDetailRecipeAdmin' });
+    }
+};
 module.exports = {
 
     getListManager, addManager, editManager, deleteManager, getSixMonthInputAndOuput,
     getListShop, editShop, addShop, getSixMonthInputAndOuputAllShop, getListIngredient,
-    addIngredient
+    addIngredient, editIngredient, getListRecipeAdmin, detailRecipeAdmin, addRecipe, editRecipe,
+    editRecipeIngredient, getListType, addRecipeType, deleteRecipeType
 };

@@ -1,4 +1,4 @@
-const {Account, Product, Cart, Cart_product, Invoice,Ingredient_shop,Shop, Ingredient } = require("../../models");
+const {Account, Product, Cart, Cart_product,Type, Invoice,Ingredient_shop,Shop, Ingredient, Recipe } = require("../../models");
 const { QueryTypes, Op, where, STRING } = require("sequelize");
 const createProduct = async (idProduct) => {
   let productList = idProduct.substring(1)
@@ -80,7 +80,125 @@ const checkExistAccount = () => {
     }
   }
 };
+const checkExistIngredient = () => {
+  return async (req, res, next) => {
+    try {
+      
 
+      const { idIngredient } = req.params
+
+      if (idIngredient === '') {
+        return res.status(400).json({ isSuccess: false, mes: 'checkExistIngredient1' });
+      }
+      if (isNaN(idIngredient)) {
+        return res.status(400).json({ isSuccess: false, mes: 'checkExistIngredient2' });
+      }
+      
+      const ingredient = await Ingredient.findOne({
+        where: {
+          idIngredient,
+        },
+      });
+      
+      //console.log(created)
+      if (!ingredient) {
+        return res.status(404).send({ isSuccess: false, mes: 'Ingredient không tồn tại' });;
+      }
+      else {
+        req.ingredient= ingredient
+        next();
+      }
+    } catch (error) {
+      return res.status(500).send({ isSuccess: false, mes: 'Có lỗi trong quá trình sửa ingredient' });;
+    }
+  }
+};
+const checkExistTypeAndRecipe = () => {
+  return async (req, res, next) => {
+    try {
+      
+
+      const { idRecipe, idType} = req.body;
+
+      if (idRecipe === ''||idType === '') {
+        return res.status(400).json({ isSuccess: false, mes: 'checkExistTypeAndRecipe1' });
+      }
+      if (isNaN(idRecipe)||isNaN(idType)) {
+        return res.status(400).json({ isSuccess: false, mes: 'checkExistTypeAndRecipe2' });
+      }
+      
+      const type = await Type.findOne({
+        where: {
+          idType,
+        },
+      });
+      const recipe = await Recipe.findOne({
+        where: {
+          idRecipe,
+        },
+      });
+      //console.log(created)
+      if (!type) {
+        return res.status(404).send({ isSuccess: false, mes: 'Type không tồn tại' });
+      }
+      else {
+        if(recipe.idType==type.idType) return res.status(400).send({ isSuccess: false, mes: 'Không chọn recipe có type trùng với type chọn' });
+        if(!recipe) return res.status(404).send({ isSuccess: false, mes: 'Recipe không tồn tại' });
+        
+        else{
+          req.type= type
+          req.recipe = recipe
+          next();
+        }
+        
+      }
+    } catch (error) {
+      return res.status(500).send({ isSuccess: false, mes: 'Có lỗi trong quá trình checkExistRecipeAndType' });
+    }
+  }
+};
+const checkExistIngredientAndRecipe = () => {
+  return async (req, res, next) => {
+    try {
+      
+
+      const { idRecipe, idIngredient} = req.body;
+
+      if (idIngredient === ''||idRecipe==='') {
+        return res.status(400).json({ isSuccess: false, mes: 'checkExistIngredientAndRecipe1' });
+      }
+      if (isNaN(idIngredient)||isNaN(idRecipe)) {
+        return res.status(400).json({ isSuccess: false, mes: 'checkExistIngredientAndRecipe2' });
+      }
+      
+      const ingredient = await Ingredient.findOne({
+        where: {
+          idIngredient,
+        },
+      });
+      const recipe = await Recipe.findOne({
+        where: {
+          idRecipe,
+        },
+      });
+      //console.log(created)
+      if (!ingredient) {
+        return res.status(404).send({ isSuccess: false, mes: 'Ingredient không tồn tại' });
+      }
+      else {
+        if(!recipe) return res.status(404).send({ isSuccess: false, mes: 'Recipe không tồn tại' });
+        else{
+          req.ingredient= ingredient
+          req.recipe = recipe
+          next();
+        }
+        
+      }
+    } catch (error) {
+      return res.status(500).send({ isSuccess: false, mes: 'Có lỗi trong quá trình checkExistIngredientAndRecipe' });
+    }
+  }
+};
 const checkExistProduct = () => {
   return async (req, res, next) => {
     try {
@@ -393,5 +511,6 @@ module.exports = {
 
   checkExistAccount, checkExistProduct, checkExistCurrentCart, checkExistProductCartAndDel,
   checkExistInvoiceLessThan3, checkExistInvoiceStatus, checkExistIngredientShop, checkNotExistAcount,
-  checkNotExistShopWithLatitudeAndLongitude
+  checkNotExistShopWithLatitudeAndLongitude, checkExistIngredient, checkExistIngredientAndRecipe,
+  checkExistTypeAndRecipe
 };
