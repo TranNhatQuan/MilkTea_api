@@ -43,6 +43,7 @@ const changeQuantityIngredientShopWithTransaction = async (ingredient, quantity,
        // console.log('test2')
         if(type==1){
             ingredient.quantity+=quantity
+            
             await ingredient.save({ transaction: t });
             infoChange = await Import.create({ 
                 idIngredient:ingredient.idIngredient,
@@ -53,8 +54,10 @@ const changeQuantityIngredientShopWithTransaction = async (ingredient, quantity,
             }, { transaction: t });
         }
         else{
-            console.log('test')
+            //console.log('test')
             ingredient.quantity-=quantity
+            //console.log('test')
+            //console.log(ingredient)
             await ingredient.save({ transaction: t });
             infoChange = await Export.create({ 
                 idIngredient:ingredient.idIngredient,
@@ -382,5 +385,5 @@ const exportIngredient = async (req, res) => {
 module.exports = {
     // getDetailTaiKhoan,
     menuByTypeForUser, menuByTypeForStaff, editRecipeShop, getInfoShop, editInfoShop, detailRecipe,
-    getListIngredientShop, importIngredient, exportIngredient, getIngredientByIdRecipe
+    getListIngredientShop, importIngredient, exportIngredient, getIngredientByIdRecipe, changeQuantityIngredientShopWithTransaction
 };

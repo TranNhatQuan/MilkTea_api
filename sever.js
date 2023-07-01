@@ -26,6 +26,8 @@ app.use(rootRouter);
 const {Invoice, Cart } = require("./models");
 const { QueryTypes, Op, where, STRING } = require("sequelize");
 
+const { changeIngredientByInvoice } = require("./controllers/order.controllers");
+
 const job = new cron.CronJob('0 */30 * * * *', async () => {
   // Mã thực hiện xoá các invoice không được thanh toán mỗi 30 phút
   await deleteUnpaidInvoices();
@@ -37,6 +39,7 @@ const job = new cron.CronJob('0 */30 * * * *', async () => {
 
 async function deleteUnpaidInvoices() {
   try {
+    const date = moment().format("YYYY-MM-DD HH:mm:ss")
     let invoices = await Invoice.findAll({
       where: {
         status: 0,
@@ -70,6 +73,8 @@ async function deleteUnpaidInvoices() {
       if (!invoice) {
         throw new Error('Invoice not found');
       }
+      let idShop = invoice.idShop
+      let infoChange = await changeIngredientByInvoice(invoice, idShop, 1, date )
       //console.log(invoice)
       await Invoice.destroy({
         where: {

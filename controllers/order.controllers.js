@@ -1,15 +1,54 @@
-const { raw } = require("body-parser");
+const { raw, text } = require("body-parser");
+const db = require("../models/index");
 const { Shop, Recipe_shop, Recipe, Recipe_type, Cart, Cart_product, Product, Shipping_company, Invoice, Recipe_ingredient, Ingredient_shop } = require("../models");
 const { QueryTypes, Op, where, STRING } = require("sequelize");
-const { getIngredientByIdRecipe } = require("./shop.controllers")
+const { getIngredientByIdRecipe, changeQuantityIngredientShopWithTransaction } = require("./shop.controllers")
 const moment = require('moment-timezone'); // require
-const changeIngredientByIdRecipe = async (idRecipe, quantity, idShop, type) => {
-    let infoChange
-    let ingredients = getIngredientByIdRecipe(idRecipe, idShop)
-    return infoChange
+
+
+
+const changeIngredientByIdRecipe = async (idRecipe, quantity, idShop, type, date, idInvoice) => {
+    
+    let infoChange1 = []
+    //console.log(1)
+    let ingredients = await getIngredientByIdRecipe(idRecipe, idShop)
+    //console.log(ingredients)
+    //console.log(2)
+    async function processIngredientsRecursive(index) {
+        if (index >= ingredients.length) {
+          return; // Kết thúc đệ quy khi đã xử lý hết tất cả các phần tử
+        }
+      
+        const item = ingredients[index];
+        let idIngredient = Number(item['idIngredient']);
+        let ingredient = await Ingredient_shop.findOne({
+          where: {
+            idIngredient,
+            idShop,
+          }
+        });
+        let quantityIngredient = Number(item['quantity']) * quantity;
+        let price;
+        if (type == 1) {
+          price = 0;
+        } else {
+          price = 'BH' + idInvoice + '-' + idRecipe + '-' + idIngredient;
+        }
+        let results = await changeQuantityIngredientShopWithTransaction(ingredient, Number(quantityIngredient), type, date, price);
+      
+        // Gọi đệ quy để xử lý vòng lặp tiếp theo
+        await processIngredientsRecursive(index + 1);
+      }
+      
+      await processIngredientsRecursive(0);
+      
+      
+      
+    //let {isSuccess, infoChange} = await changeQuantityIngredientShopWithTransaction(ingredient, Number(quantity), 1, date, price)
+    return infoChange1
 }
-const changeIngredientByInvoice = async (invoice, idShop, type) => {
-    let infoChange
+const changeIngredientByInvoice = async (invoice, idShop, type, date) => {
+    let infoChange = []
     //let quantity = 0
     let cart = await Cart.findAll({
         where: {
@@ -33,14 +72,17 @@ const changeIngredientByInvoice = async (invoice, idShop, type) => {
             }
         ],
     })
-    cart.forEach(async (item) => {
-        //quantity += Number(item['Cart_products.Product.quantity'])
-        let idRecipe =  Number(item['Cart_products.Product.Recipe.idRecipe'])
-        let quantity = Number(item['Cart_products.Product.quantity']) * Number(item['Cart_products.quantity'])
-        let info = await changeIngredientByIdRecipe(idRecipe, quantity, idShop, type)
-    });
-    // infoChange = quantity
-    return cart
+    
+
+    
+    for (const item of cart) {
+        let idRecipe = Number(item['Cart_products.Product.Recipe.idRecipe']);
+        let quantity = Number(item['Cart_products.Product.quantity']) * Number(item['Cart_products.quantity']);
+        let info = await changeIngredientByIdRecipe(idRecipe, quantity, idShop, type, date, invoice.idInvoice);
+        infoChange.push(...info);
+      }
+      
+    return infoChange
 }
 const getToppingOfProductOfInvoice = async (idProduct) => {
 
@@ -644,6 +686,9 @@ const cancelInvoice = async (req, res) => {
         })
 
         if (invoice.status == 0) {
+            const date = moment().format("YYYY-MM-DD HH:mm:ss")
+            const idShop = invoice.idShop
+            let infoChange = await changeIngredientByInvoice(invoice, idShop, 1, date )
             await invoice.destroy();
             return res.status(200).json({ isSuccess: true, isCancel: true, mes: "Đã huỷ thành công hoá đơn chưa thanh toán" });
         }
@@ -724,25 +769,51 @@ const createInvoice = async (req, res) => {
             return res.status(400).json({ isSuccess: false });
         }
         // console.log('test1')
+        const date = moment().format("YYYY-MM-DD HH:mm:ss")
         let invoice = await Invoice.create({
             idCart: currentCart.idCart,
             idShop,
             idShipping_company,
             shippingFee,
             total,
-            date: moment().format("YYYY-MM-DD HH:mm:ss"),
+            date: date,
             status: 0,
         })
 
 
-        const idInvoice = invoice.idInvoice
-        currentCart.isCurrent = 0
-        //let infoChange = await changeIngredientByInvoice(invoice, 1)
-        await currentCart.save()
-
+        let idInvoice 
+        
+        
+        const t = await db.sequelize.transaction(); // Bắt đầu transaction\
+        try {
+            // console.log('test2')
+            let invoice = await Invoice.create({
+                idCart: currentCart.idCart,
+                idShop,
+                idShipping_company,
+                shippingFee,
+                total,
+                date: moment().format("YYYY-MM-DD HH:mm:ss"),
+                status: 0,
+            },{ transaction: t })
+    
+            const date = moment().format("YYYY-MM-DD HH:mm:ss")
+            idInvoice = invoice.idInvoice
+            currentCart.isCurrent = 0
+            let infoChange = await changeIngredientByInvoice(invoice, idShop, 0, date,{ transaction: t } )
+            await currentCart.save({ transaction: t })
+            //await invoice.destroy()
+             
+             await t.commit(); // Lưu thay đổi và kết thúc transaction
+             isSuccess= true
+         } catch (error) {
+             isSuccess= false
+             await t.rollback(); // Hoàn tác các thay đổi và hủy bỏ transaction7
+         
+         }
 
         //console.log(listTopping)
-        return res.status(200).json({ isSuccess: true, idInvoice, cart, infoChange });
+        return res.status(200).json({ isSuccess: true, idInvoice, cart });
     } catch (error) {
         res.status(500).json({ error: 'Đã xảy ra lỗi' });
     }
@@ -765,26 +836,37 @@ const testInvoice = async (req, res) => {
         if (listIdProduct != '') {
             return res.status(400).json({ isSuccess: false });
         }
-        // console.log('test1')
-        let invoice = await Invoice.create({
-            idCart: currentCart.idCart,
-            idShop,
-            idShipping_company,
-            shippingFee,
-            total,
-            date: moment().format("YYYY-MM-DD HH:mm:ss"),
-            status: 0,
-        })
-
-
-        const idInvoice = invoice.idInvoice
-        currentCart.isCurrent = 0
-        let infoChange = await changeIngredientByInvoice(invoice, idShop, 1)
-        //await currentCart.save()
-        await invoice.destroy()
+        const t = await db.sequelize.transaction(); // Bắt đầu transaction\
+        try {
+            // console.log('test2')
+            let invoice = await Invoice.create({
+                idCart: currentCart.idCart,
+                idShop,
+                idShipping_company,
+                shippingFee,
+                total,
+                date: moment().format("YYYY-MM-DD HH:mm:ss"),
+                status: 0,
+            },{ transaction: t })
+    
+            const date = moment().format("YYYY-MM-DD HH:mm:ss")
+            const idInvoice = invoice.idInvoice
+            currentCart.isCurrent = 0
+            let infoChange = await changeIngredientByInvoice(invoice, idShop, 0, date,{ transaction: t } )
+            //await currentCart.save()
+            //await invoice.destroy()
+             
+             await t.commit(); // Lưu thay đổi và kết thúc transaction
+             isSuccess= true
+         } catch (error) {
+             isSuccess= false
+             await t.rollback(); // Hoàn tác các thay đổi và hủy bỏ transaction7
+         
+         }
+        
 
         //console.log(listTopping)
-        return res.status(200).json({ isSuccess: true, idInvoice, cart, infoChange });
+        return res.status(200).json({ isSuccess, cart });
     } catch (error) {
         res.status(500).json({ error: 'Đã xảy ra lỗi' });
     }
@@ -980,6 +1062,6 @@ module.exports = {
     // getDetailTaiKhoan,
     getToppingOptions, editCart, addToCart, getCurrentCart, getShipFee, getListCompanies, createInvoice, confirmDeleteProductCart,
     confirmInvoice, getCurrentInvoice, getAllInvoiceUser, getDetailInvoice, cancelInvoice, getAllOrder, changeStatusInvoice,
-    getAllOrderInTransit, getAllInvoiceByDate, getDetailCart, searchRecipe, testInvoice
+    getAllOrderInTransit, getAllInvoiceByDate, getDetailCart, searchRecipe, testInvoice, changeIngredientByInvoice
 
 };

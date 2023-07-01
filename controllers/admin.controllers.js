@@ -967,9 +967,8 @@ const getListType = async (req, res) => {
                 include: [
                     {
                         model: Recipe,
-                        attributes: ['name', 'info', 'price', 'image'],
-                        where: { isDel: 0 }
-
+                        attributes: ['name', 'info', 'price', 'image', 'isDel'],
+                        
                     }
                 ]
             },
@@ -981,6 +980,7 @@ const getListType = async (req, res) => {
                 recipe.dataValues.info = recipe.Recipe.dataValues.info
                 recipe.dataValues.price = recipe.Recipe.dataValues.price
                 recipe.dataValues.image = recipe.Recipe.dataValues.image
+                recipe.dataValues.isDel = recipe.Recipe.dataValues.isDel
                 delete recipe.dataValues.idType
                 delete recipe.dataValues.Recipe
             });
